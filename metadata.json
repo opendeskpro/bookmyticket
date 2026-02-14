@@ -1,0 +1,7 @@
+{
+  "name": "Book my Ticket",
+  "description": "A high-performance event discovery, booking, and management platform featuring multi-tenant portals for users, organisers, and administrators with AI-powered enhancements.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
