@@ -4,10 +4,7 @@ import { UserRole, AppState, User, TicketStatus, Event } from './types.ts';
 import { MOCK_EVENTS } from './constants.tsx';
 import Layout from './components/Layout.tsx';
 import OrganiserLayout from './components/OrganiserLayout.tsx';
-import { supabase } from './lib/supabase.ts';
-
-
-
+import { api } from './lib/api.ts';
 
 // Pages
 import HomePage from './pages/Public/HomePage.tsx';
@@ -60,29 +57,21 @@ const App: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       setLoading(true);
+      const token = localStorage.getItem('token');
       let currentUser: User | null = null;
 
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-          currentUser = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: profile?.full_name || session.user.user_metadata?.name || 'User',
-            role: profile?.role || UserRole.PUBLIC,
-            walletBalance: 0,
-            isMobileVerified: !!session.user.phone || profile?.is_verified
-          };
+      if (token) {
+        try {
+          // Fetch profile using token if needed
+          // For now we'll rely on the user state being set after login
+        } catch (authErr) {
+          console.warn("Auth initialization issue:", authErr);
+          localStorage.removeItem('token');
         }
-      } catch (authErr) {
-        console.warn("Auth initialization issue:", authErr);
       }
 
-
-      let eventsList: any[] = [...MOCK_EVENTS];
       try {
-        const { data: events, error } = await supabase.from('events').select('*');
+        const events = await api.events.list();
         if (events && events.length > 0) {
           const dbEvents = events.map(event => ({
             ...event,
@@ -90,46 +79,19 @@ const App: React.FC = () => {
             date: event.event_date || event.date,
             time: event.start_time || event.time
           }));
-          eventsList = [...dbEvents, ...MOCK_EVENTS.filter(me => !dbEvents.some(de => String(de.id) === String(me.id)))];
+          setAppState(prev => ({
+            ...prev,
+            events: [...dbEvents, ...MOCK_EVENTS.filter(me => !dbEvents.some(de => String(de.id) === String(me.id)))]
+          }));
         }
       } catch (dbErr) {
         console.warn("Using mock events fallback:", dbErr);
       }
 
-
-      setAppState(prev => ({ ...prev, user: currentUser, events: eventsList }));
       setLoading(false);
     };
 
     initializeApp();
-
-    let subscription: any = null;
-    if (supabase?.auth) {
-      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (session?.user) {
-          try {
-            const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            const user: User = {
-              id: session.user.id,
-              email: session.user.email || '',
-              name: profile?.full_name || session.user.user_metadata?.name || 'User',
-              role: profile?.role || UserRole.PUBLIC,
-              walletBalance: 0
-            };
-            setAppState(prev => ({ ...prev, user }));
-          } catch (e) {
-            console.warn("Session profile fetch issue", e);
-          }
-        } else {
-          setAppState(prev => ({ ...prev, user: null }));
-        }
-      });
-      subscription = data?.subscription;
-    }
-
-    return () => {
-      if (subscription) subscription.unsubscribe();
-    };
   }, []);
 
   const setUser = (user: User | null) => {

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Event, User, TicketStatus, PricingBreakup } from '../../types.ts';
 // Fix: Added missing Ticket import from lucide-react to resolve the component not found error
 import { ChevronLeft, ShieldCheck, Loader2, ReceiptText, ArrowRight, CheckCircle2, Zap, Info, Tag, Armchair, Ticket } from 'lucide-react';
-import { supabase } from '../../lib/supabase.ts';
+import { api } from '../../lib/api.ts';
 
 interface BookingPageProps {
   events: Event[];
@@ -12,44 +12,52 @@ interface BookingPageProps {
   onBook: (ticket: any) => void;
 }
 
-// Fixed: Added default export and component implementation for BookingPage
 const BookingPage: React.FC<BookingPageProps> = ({ events, user, onBook }) => {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const [event, setEvent] = useState<Event | null>(events.find(e => e.id === eventId) || null);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const event = events.find(e => e.id === eventId);
+  useEffect(() => {
+    if (!event && eventId) {
+      api.events.get(eventId).then(setEvent).catch(err => setError(err.message));
+    }
+  }, [eventId, event]);
 
   if (!event) {
-    return <div className="p-20 text-center">Event not found</div>;
+    return <div className="p-20 text-center">{error || "Event not found"}</div>;
   }
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!selectedTicket) return;
 
     setIsProcessing(true);
+    setError(null);
     const ticketType = event.tickets.find(t => t.id === selectedTicket);
+    const token = localStorage.getItem('token');
 
-    // Simulate API delay
-    setTimeout(() => {
-      const newTicket = {
-        id: `TKT-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        bookingId: `BK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        userId: user.id,
-        eventId: event.id,
-        eventTitle: event.title,
-        ticketTypeName: ticketType?.name || 'Standard Pass',
-        qrCode: `QR-${Math.random().toString(16).substr(2, 8)}`,
-        status: TicketStatus.BOOKED,
-        purchaseDate: new Date().toISOString(),
-        pricePaid: ticketType?.price || 500
-      };
-
-      onBook(newTicket);
+    if (!token) {
+      setError("Please log in to book tickets.");
       setIsProcessing(false);
+      return;
+    }
+
+    try {
+      const response = await api.bookings.create({
+        event_id: event.id,
+        ticket_type_id: selectedTicket,
+        quantity: 1 // Simple booking for now
+      }, token);
+
+      onBook(response);
       navigate('/my-tickets');
-    }, 1500);
+    } catch (err: any) {
+      setError(err.message || "Booking failed");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (

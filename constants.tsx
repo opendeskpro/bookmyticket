@@ -1,14 +1,14 @@
 
 import React from 'react';
-import { 
-  Music, 
-  Trophy, 
-  Cpu, 
-  Theater, 
-  Mic2, 
-  LayoutDashboard, 
-  Calendar, 
-  Ticket, 
+import {
+  Music,
+  Trophy,
+  Cpu,
+  Theater,
+  Mic2,
+  LayoutDashboard,
+  Calendar,
+  Ticket,
   Users,
   PartyPopper,
   Zap,
@@ -44,6 +44,8 @@ export const MOCK_EVENTS = [
     status: 'APPROVED',
     isVirtual: false,
     isExclusive: true,
+    latitude: 11.0168,
+    longitude: 76.9558,
     tickets: [{ id: 't1', name: 'Paid', price: 499, quantity: 200, sold: 150 }]
   },
   {
@@ -52,6 +54,8 @@ export const MOCK_EVENTS = [
     description: 'A tribute to A R Rahman & Prabhudeva.',
     category: 'Musics',
     location: 'Chennai',
+    latitude: 13.0827,
+    longitude: 80.2707,
     date: '2026-01-04',
     time: '18:30',
     banner: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=800&h=400&auto=format&fit=crop',
@@ -65,6 +69,8 @@ export const MOCK_EVENTS = [
     description: 'The magic of pure sound in an architecturally designed auditorium.',
     category: 'Concert',
     location: 'Chennai',
+    latitude: 13.05,
+    longitude: 80.25,
     date: '2025-12-24',
     time: '19:00',
     banner: 'https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=800&h=400&auto=format&fit=crop',

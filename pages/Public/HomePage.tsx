@@ -24,9 +24,12 @@ import {
   Menu,
   Zap,
   Calendar as CalendarIcon,
-  Clock
+  Clock,
+  LayoutGrid,
+  Map as MapIcon
 } from 'lucide-react';
 import { Event } from '../../types.ts';
+import EventMap from '../../components/EventMap.tsx';
 
 interface HomePageProps {
   events: Event[];
@@ -73,6 +76,7 @@ const CountdownTimer: React.FC<{ targetDate: string }> = ({ targetDate }) => {
 const HomePage: React.FC<HomePageProps> = ({ events }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   const categories = [
     { name: 'All', icon: <Menu size={20} /> },
@@ -358,63 +362,80 @@ const HomePage: React.FC<HomePageProps> = ({ events }) => {
               <h2 className="text-[32px] md:text-[40px] font-bold text-[#484848] tracking-tight">Explore Popular Events 🥳</h2>
               <p className="text-[#767676] font-medium text-[16px]">Dive into the most popular events and experiences nearby!</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex bg-[#f9fafb] p-1 rounded-2xl border border-black/5 mr-4">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-6 py-3 rounded-xl flex items-center gap-2 text-[12px] font-bold transition-all ${viewMode === 'grid' ? 'bg-white shadow-md text-[#ff5862]' : 'text-[#767676] hover:text-[#484848]'}`}
+                >
+                  <LayoutGrid size={16} /> Grid
+                </button>
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`px-6 py-3 rounded-xl flex items-center gap-2 text-[12px] font-bold transition-all ${viewMode === 'map' ? 'bg-white shadow-md text-[#ff5862]' : 'text-[#767676] hover:text-[#484848]'}`}
+                >
+                  <MapIcon size={16} /> Map View
+                </button>
+              </div>
               <button className="px-8 py-4 rounded-2xl bg-[#fff2f3] border border-[#ff5862]/10 text-[#ff5862] text-[12px] font-bold flex items-center gap-2">
                 <CalendarIcon size={16} /> All Events
               </button>
               <button className="px-8 py-4 rounded-2xl bg-[#f9fafb] border border-black/5 text-[#767676] text-[12px] font-bold flex items-center gap-2">
                 <CalendarIcon size={16} /> This Month
               </button>
-              <button className="px-8 py-4 rounded-2xl bg-[#f9fafb] border border-black/5 text-[#767676] text-[12px] font-bold flex items-center gap-2">
-                <CalendarIcon size={16} /> This Week
-              </button>
             </div>
           </div>
 
-          {/* Category Icons - Exact Image 1 Style */}
-          <div className="flex items-start justify-between overflow-x-auto pb-8 no-scrollbar gap-8">
-            {categories.map(cat => (
-              <button
-                key={cat.name}
-                onClick={() => setActiveCategory(cat.name)}
-                className="flex flex-col items-center gap-4 group min-w-[80px]"
-              >
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${activeCategory === cat.name ? 'bg-[#FF5A5F] text-white shadow-xl shadow-[#FF5A5F]/30 scale-110' : 'bg-[#F7F7F7] text-[#484848] border border-black/5 group-hover:bg-white group-hover:shadow-lg'}`}>
-                  {React.cloneElement(cat.icon as React.ReactElement, { size: 24 })}
-                </div>
-                <span className={`text-[11px] font-black uppercase tracking-wider text-center transition-colors ${activeCategory === cat.name ? 'text-[#484848]' : 'text-[#767676] group-hover:text-[#484848]'}`}>
-                  {cat.name}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-4 max-[1200px]:grid-cols-3 max-[992px]:grid-cols-2 max-[768px]:grid-cols-1 gap-10">
-            {filteredEvents.slice(0, 8).map(event => (
-              <Link key={event.id} to={`/event/${event.id}`} className="group card-clean overflow-hidden p-2 flex flex-col">
-                <div className="aspect-[16/10] rounded-[2.25rem] overflow-hidden relative mb-6">
-                  <img src={event.banner} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={event.title} />
-                  <button className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-[#767676] hover:text-[#FF5A5F] border border-black/5 transition-all shadow-sm">
-                    <Heart size={18} />
+          {viewMode === 'grid' ? (
+            <>
+              {/* Category Icons - Exact Image 1 Style */}
+              <div className="flex items-start justify-between overflow-x-auto pb-8 no-scrollbar gap-8">
+                {categories.map(cat => (
+                  <button
+                    key={cat.name}
+                    onClick={() => setActiveCategory(cat.name)}
+                    className="flex flex-col items-center gap-4 group min-w-[80px]"
+                  >
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${activeCategory === cat.name ? 'bg-[#FF5A5F] text-white shadow-xl shadow-[#FF5A5F]/30 scale-110' : 'bg-[#F7F7F7] text-[#484848] border border-black/5 group-hover:bg-white group-hover:shadow-lg'}`}>
+                      {React.cloneElement(cat.icon as React.ReactElement, { size: 24 })}
+                    </div>
+                    <span className={`text-[11px] font-black uppercase tracking-wider text-center transition-colors ${activeCategory === cat.name ? 'text-[#484848]' : 'text-[#767676] group-hover:text-[#484848]'}`}>
+                      {cat.name}
+                    </span>
                   </button>
-                </div>
-                <div className="px-5 pb-5 space-y-4">
-                  <h3 className="text-[18px] font-bold text-[#484848] group-hover:text-[#ff5862] transition-colors line-clamp-1">{event.title}</h3>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-3 text-[13px] font-medium text-[#767676]">
-                      <MapPin size={16} className="text-[#ff5862]" /> {event.city}, India
+                ))}
+              </div>
+
+              <div className="grid grid-cols-4 max-[1200px]:grid-cols-3 max-[992px]:grid-cols-2 max-[768px]:grid-cols-1 gap-10">
+                {filteredEvents.slice(0, 8).map(event => (
+                  <Link key={event.id} to={`/event/${event.id}`} className="group card-clean overflow-hidden p-2 flex flex-col">
+                    <div className="aspect-[16/10] rounded-[2.25rem] overflow-hidden relative mb-6">
+                      <img src={event.banner} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={event.title} />
+                      <button className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-[#767676] hover:text-[#FF5A5F] border border-black/5 transition-all shadow-sm">
+                        <Heart size={18} />
+                      </button>
                     </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-black/[0.05]">
-                      <div className="flex items-center gap-2 text-[13px] font-medium text-[#767676]">
-                        <CalendarIcon size={16} className="text-[#ff5862]" /> {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <div className="px-5 pb-5 space-y-4">
+                      <h3 className="text-[18px] font-bold text-[#484848] group-hover:text-[#ff5862] transition-colors line-clamp-1">{event.title}</h3>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-3 text-[13px] font-medium text-[#767676]">
+                          <MapPin size={16} className="text-[#ff5862]" /> {event.city}, India
+                        </div>
+                        <div className="flex items-center justify-between pt-4 border-t border-black/[0.05]">
+                          <div className="flex items-center gap-2 text-[13px] font-medium text-[#767676]">
+                            <CalendarIcon size={16} className="text-[#ff5862]" /> {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                          <span className="text-[#484848] text-[13px] font-bold">Paid</span>
+                        </div>
                       </div>
-                      <span className="text-[#484848] text-[13px] font-bold">Paid</span>
                     </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <EventMap events={filteredEvents} />
+          )}
         </section>
 
         {/* Newsletter Section - Clean Light Style */}

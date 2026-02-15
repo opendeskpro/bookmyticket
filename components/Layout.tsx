@@ -28,8 +28,14 @@ import {
   HelpCircle,
   UserPlus,
   Globe,
-  LayoutDashboard
+  LayoutDashboard,
+  Clapperboard as ClapperboardIcon,
+  ShoppingBag,
+  Camera,
+  Layers
 } from 'lucide-react';
+import LocationModal from './LocationModal';
+import SideMenu from './SideMenu';
 
 interface LayoutProps {
   user: User | null;
@@ -57,10 +63,12 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [locationName, setLocationName] = useState('Coimbatore');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   const navigate = useNavigate();
   const profileRef = useRef<HTMLDivElement>(null);
   const createRef = useRef<HTMLDivElement>(null);
+  const exploreRef = useRef<HTMLDivElement>(null);
 
 
   useEffect(() => {
@@ -70,6 +78,9 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
       }
       if (createRef.current && !createRef.current.contains(event.target as Node)) {
         setIsCreateOpen(false);
+      }
+      if (exploreRef.current && !exploreRef.current.contains(event.target as Node)) {
+        setIsExploreOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -94,9 +105,40 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
             </Link>
 
             <div className="hidden lg:flex items-center gap-8 border-l border-black/5 pl-8">
-              <button className="flex items-center gap-2 text-[14px] font-semibold text-[#484848] hover:text-[#ff5862] transition-all">
-                Explore <ChevronDown size={16} />
-              </button>
+              <div className="relative" ref={exploreRef}>
+                <button
+                  onClick={() => setIsExploreOpen(!isExploreOpen)}
+                  className={`flex items-center gap-2 text-[14px] font-semibold transition-all ${isExploreOpen ? 'text-[#ff5862]' : 'text-[#484848] hover:text-[#ff5862]'}`}
+                >
+                  Explore <ChevronDown size={16} className={`transition-transform duration-300 ${isExploreOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isExploreOpen && (
+                  <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-2xl shadow-2xl border border-black/5 p-2 z-[200] animate-in fade-in slide-in-from-top-2 duration-200">
+                    {[
+                      { icon: <TicketIcon size={18} />, label: 'Events', desc: 'Now Live', color: 'bg-red-50 text-red-500', link: '/' },
+                      { icon: <ShoppingBag size={18} />, label: 'Brands', desc: 'Now Live', color: 'bg-pink-50 text-pink-500', link: '/brands' },
+                      { icon: <Camera size={18} />, label: 'Creators', desc: 'Join the waitlist', color: 'bg-orange-50 text-orange-500', link: '/creators' },
+                      { icon: <Layers size={18} />, label: 'Coupons', desc: 'Latest Offers', color: 'bg-amber-50 text-amber-500', link: '/coupons' },
+                    ].map((item, i) => (
+                      <Link
+                        key={i}
+                        to={item.link}
+                        onClick={() => setIsExploreOpen(false)}
+                        className="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f9fafb] transition-all group"
+                      >
+                        <div className={`w-10 h-10 rounded-full ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                          {item.icon}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[14px] text-[#484848]">{item.label}</p>
+                          <p className="text-[11px] text-[#767676] font-medium">{item.desc}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="relative group">
                 <input
@@ -111,9 +153,12 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
 
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center gap-6">
-              <div className="flex items-center gap-2 text-[14px] font-semibold text-[#484848] cursor-pointer hover:text-[#ff5862] transition-colors">
-                <MapPin size={18} className="text-[#ff5862]" />
-                {locationName} <ChevronDown size={14} />
+              <div
+                onClick={() => setIsLocationModalOpen(true)}
+                className="flex items-center gap-2 text-[14px] font-semibold text-[#484848] cursor-pointer hover:text-[#ff5862] transition-colors group"
+              >
+                <MapPin size={18} className="text-[#ff5862] group-hover:scale-110 transition-transform" />
+                {locationName} <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
               </div>
               <div className="flex items-center gap-3 text-[#767676] opacity-60">
                 <TicketIcon size={18} />
@@ -207,13 +252,30 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
                 </div>
               )}
 
-              <button className="w-10 h-10 flex items-center justify-center text-[#484848] hover:text-[#ff5862] bg-[#f9fafb] rounded-full border border-black/5 transition-all">
+              <button
+                onClick={() => setIsMobileNavOpen(true)}
+                className="w-10 h-10 flex items-center justify-center text-[#484848] hover:text-[#ff5862] bg-[#f9fafb] rounded-full border border-black/5 transition-all active:scale-95"
+              >
                 <Menu size={20} />
               </button>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Modals & Drawers */}
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onSelect={setLocationName}
+        currentCity={locationName}
+      />
+
+      <SideMenu
+        isOpen={isMobileNavOpen}
+        onClose={() => setIsMobileNavOpen(false)}
+        user={user}
+      />
 
       {/* Secondary Nav Bar */}
       <div className="bg-white border-b border-black/5 h-12 hidden md:flex items-center sticky top-20 z-[90]">
