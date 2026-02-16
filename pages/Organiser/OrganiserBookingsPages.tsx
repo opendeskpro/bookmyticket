@@ -1,4 +1,23 @@
 import React from 'react';
+import {
+  Search,
+  PlusCircle,
+  Circle,
+  IndianRupee,
+  Calendar,
+  CreditCard,
+  Clock,
+  History,
+  TrendingDown,
+  Info,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Eye,
+  FileBarChart,
+  Download,
+  Share2
+} from 'lucide-react';
 
 type BookingStatus = 'COMPLETED' | 'PENDING' | 'REJECTED' | 'FREE';
 
@@ -77,75 +96,80 @@ const BookingsTable: React.FC<BookingsProps> = ({ mode }) => {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
         <div>
-          <h2 className="text-lg font-semibold text-white">
-            Event Booking {mode === 'all' ? '' : `– ${mode.charAt(0).toUpperCase()}${mode.slice(1)}`}
+          <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">
+            Order Ledger {mode === 'all' ? '' : `// ${mode}`}
           </h2>
-          <p className="text-xs text-slate-400">
-            View and manage ticket bookings and payment status.
+          <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+            Monitoring real-time booking mutations and guest fulfillment.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3 text-xs">
-          <input
-            type="text"
-            placeholder="Search by Order ID"
-            className="bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2 w-40 placeholder:text-slate-500"
-          />
-          <input
-            type="text"
-            placeholder="Search by Event Title"
-            className="bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2 w-48 placeholder:text-slate-500"
-          />
-          <select className="bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2">
-            <option value="all">Payment – All</option>
-            <option value="completed">Completed</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
+        <div className="flex flex-wrap gap-4">
+          <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-3.5 flex items-center gap-4 backdrop-blur-xl">
+            <Search size={16} className="text-white/20" />
+            <input
+              type="text"
+              placeholder="FILTER BY ORDER_ID"
+              className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-white placeholder:text-white/10 outline-none border-none w-48"
+            />
+          </div>
+          <select className="bg-white/5 border border-white/10 rounded-2xl px-6 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-white outline-none backdrop-blur-xl cursor-pointer hover:bg-white/10 transition-all">
+            <option value="all" className="bg-slate-900">Filter By Status</option>
+            <option value="completed" className="bg-slate-900">Completed</option>
+            <option value="pending" className="bg-slate-900">Pending</option>
+            <option value="rejected" className="bg-slate-900">Rejected</option>
           </select>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-[#050716] overflow-hidden">
-        <table className="w-full text-xs">
-          <thead className="bg-[#080c1f] text-slate-400">
-            <tr>
-              <th className="text-left px-6 py-3 font-medium">Booking ID</th>
-              <th className="text-left px-4 py-3 font-medium">Event</th>
-              <th className="text-left px-4 py-3 font-medium">Customer</th>
-              <th className="text-left px-4 py-3 font-medium">Cust. Paid</th>
-              <th className="text-left px-4 py-3 font-medium">Org. Received</th>
-              <th className="text-left px-4 py-3 font-medium">Paid Via</th>
-              <th className="text-left px-4 py-3 font-medium">Payment Status</th>
-              <th className="text-left px-4 py-3 font-medium">Ticket Scan Status</th>
-              <th className="text-right px-6 py-3 font-medium">Actions</th>
+      <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 overflow-hidden shadow-2xl">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-white/5">
+              <th className="px-10 py-7">Booking Hash</th>
+              <th className="px-8 py-7">Target Event</th>
+              <th className="px-8 py-7">Guest Identity</th>
+              <th className="px-8 py-7">Revenue Status</th>
+              <th className="px-8 py-7">Payment Vector</th>
+              <th className="px-8 py-7">Fulfillment</th>
+              <th className="px-10 py-7 text-right">Action Hub</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-white/5">
             {filtered.map((b) => (
               <tr
                 key={b.id}
-                className="border-t border-slate-800/70 hover:bg-[#080c1f]/60 transition-colors"
+                className="hover:bg-white/5 transition-colors group"
               >
-                <td className="px-6 py-3 text-slate-200">{b.id}</td>
-                <td className="px-4 py-3 text-slate-200">{b.event}</td>
-                <td className="px-4 py-3 text-slate-200">{b.customer}</td>
-                <td className="px-4 py-3 text-slate-200">₹{b.customerPaid}</td>
-                <td className="px-4 py-3 text-slate-200">₹{b.organiserReceived}</td>
-                <td className="px-4 py-3 text-slate-200">{b.paidVia}</td>
-                <td className="px-4 py-3">
+                <td className="px-10 py-8 text-[11px] font-black text-white/60 font-mono italic">{b.id}</td>
+                <td className="px-8 py-8">
+                  <div className="font-black text-white text-[13px] italic leading-tight max-w-[200px] truncate">{b.event}</div>
+                </td>
+                <td className="px-8 py-8 text-[11px] font-black text-white uppercase tracking-widest italic">{b.customer}</td>
+                <td className="px-8 py-8">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-black text-white">₹{b.organiserReceived}</span>
+                    <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Net Payout</span>
+                  </div>
+                </td>
+                <td className="px-8 py-8">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-white/40 uppercase italic">{b.paidVia}</span>
+                  </div>
+                </td>
+                <td className="px-8 py-8">
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold ${paymentBadgeClasses[b.paymentStatus]
+                    className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border ${paymentBadgeClasses[b.paymentStatus]
                       }`}
                   >
                     {b.paymentStatus}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-slate-200">{b.ticketScanStatus}</td>
-                <td className="px-6 py-3 text-right">
-                  <button className="inline-flex items-center px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-[#101632] text-slate-200 hover:bg-[#161d3c] border border-slate-700/60">
-                    Select
+                <td className="px-10 py-8 text-right">
+                  <button className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 hover:bg-white hover:text-black hover:scale-105 transition-all shadow-xl active:scale-95 italic">
+                    Inspect
                   </button>
                 </td>
               </tr>
@@ -154,10 +178,10 @@ const BookingsTable: React.FC<BookingsProps> = ({ mode }) => {
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={9}
-                  className="px-6 py-10 text-center text-slate-500 text-sm"
+                  colSpan={7}
+                  className="px-6 py-20 text-center"
                 >
-                  No bookings found for this filter yet.
+                  <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] italic">No data transmissions detected for this sector.</p>
                 </td>
               </tr>
             )}
@@ -183,61 +207,68 @@ export const RejectedBookingsPage: React.FC = () => (
 );
 
 export const BookingsReportPage: React.FC = () => (
-  <div className="space-y-6">
+  <div className="space-y-10 animate-in fade-in duration-700 max-w-5xl">
     <div>
-      <h2 className="text-lg font-semibold text-white">Report</h2>
-      <p className="text-xs text-slate-400">
-        Export booking reports by date range, payment method, and status.
+      <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Intelligence Report</h2>
+      <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+        Synthesizing historical booking data into actionable analytical nodes.
       </p>
     </div>
-    <div className="rounded-xl border border-slate-800 bg-[#050716] p-6 space-y-4 text-xs">
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">From</label>
-          <input
-            type="date"
-            className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-          />
+    <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-12 space-y-10 shadow-2xl relative overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Temporal Start</label>
+          <div className="relative">
+            <Calendar size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10" />
+            <input
+              type="date"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl pl-16 pr-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest color-scheme-dark"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">To</label>
-          <input
-            type="date"
-            className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-          />
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Temporal End</label>
+          <div className="relative">
+            <Calendar size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10" />
+            <input
+              type="date"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl pl-16 pr-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest color-scheme-dark"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">
-            Payment Method
-          </label>
-          <select className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2">
-            <option>All</option>
-            <option>Credit / Debit Card</option>
-            <option>Net Banking</option>
-            <option>UPI / Wallet</option>
-          </select>
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Payment Node</label>
+          <div className="relative">
+            <CreditCard size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10" />
+            <select className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl pl-16 pr-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[11px] tracking-widest appearance-none">
+              <option className="bg-[#050716]">All Vectors</option>
+              <option className="bg-[#050716]">Credit / Debit Card</option>
+              <option className="bg-[#050716]">Net Banking</option>
+              <option className="bg-[#050716]">UPI / Wallet</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">
-            Payment Status
-          </label>
-          <select className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2">
-            <option>All</option>
-            <option>Completed</option>
-            <option>Pending</option>
-            <option>Rejected</option>
-          </select>
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Mutation Status</label>
+          <div className="relative">
+            <History size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10" />
+            <select className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl pl-16 pr-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[11px] tracking-widest appearance-none">
+              <option className="bg-[#050716]">All States</option>
+              <option className="bg-[#050716]">Completed</option>
+              <option className="bg-[#050716]">Pending</option>
+              <option className="bg-[#050716]">Rejected</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div className="flex justify-between items-center pt-2">
-        <button className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg px-6 py-2">
-          Submit
+      <div className="flex justify-end gap-6 pt-6 border-t border-white/5">
+        <button className="px-10 py-4 bg-white/5 text-white/40 font-black rounded-2xl text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white hover:text-black transition-all italic flex items-center gap-3 active:scale-95">
+          <Download size={16} /> Export Dataset
         </button>
-        <button className="border border-emerald-500/60 text-emerald-300 hover:bg-emerald-500/10 font-semibold rounded-lg px-5 py-2">
-          Export
+        <button className="px-12 py-4 bg-[#7209B7] text-white font-black rounded-2xl text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#7209B7] transition-all shadow-2xl shadow-purple-500/20 italic flex items-center gap-3 active:scale-95">
+          <FileBarChart size={16} /> Compile Report
         </button>
       </div>
     </div>
   </div>
 );
-

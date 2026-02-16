@@ -65,10 +65,12 @@ export interface Event {
   country?: string;
   zipCode?: string;
   location?: string;
-  date: string;
-  time: string;
-  capacity: number;
   banner: string;
+  banner_url?: string;
+  date: string;
+  event_date?: string;
+  time: string;
+  start_time?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   isVirtual?: boolean;
   isExclusive?: boolean;
@@ -128,6 +130,60 @@ export interface Organizer {
   status: 'ACTIVE' | 'PENDING' | 'SUSPENDED';
   panNumber: string;
   bankDetails: any;
+  walletBalance: number;
+}
+
+// NEW: Ecommerce Product interface
+export interface Product {
+  id: string;
+  organiserId: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  type: 'PHYSICAL' | 'DIGITAL';
+  stock: number;
+  status: 'ACTIVE' | 'DEACTIVE';
+  isFeatured: boolean;
+  createdAt: string;
+}
+
+// NEW: Financial Transaction interface
+export interface Transaction {
+  id: string;
+  organiserId: string;
+  type: 'CREDIT' | 'DEBIT';
+  amount: number;
+  method: string;
+  preBalance: number;
+  afterBalance: number;
+  status: 'SUCCESS' | 'PENDING' | 'FAILED';
+  createdAt: string;
+}
+
+// NEW: Withdrawal request interface
+export interface Withdrawal {
+  id: string;
+  organiserId: string;
+  amount: number;
+  charge: number; // Platform commission
+  payable: number; // Final amount to organizer
+  method: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}
+
+// NEW: Blog/CMS interface
+export interface BlogPost {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  image: string;
+  author: string;
+  status: 'PUBLISHED' | 'DRAFT';
+  createdAt: string;
 }
 
 export interface AppState {

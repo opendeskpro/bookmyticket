@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+
 import { Link, useNavigate } from 'react-router-dom';
 import {
   MapPin,
@@ -28,8 +28,8 @@ import {
   LayoutGrid,
   Map as MapIcon
 } from 'lucide-react';
-import { Event } from '../../types.ts';
-import EventMap from '../../components/EventMap.tsx';
+import { Event } from '../../types';
+import EventMap from '../../components/EventMap';
 
 interface HomePageProps {
   events: Event[];

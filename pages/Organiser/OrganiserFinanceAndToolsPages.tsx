@@ -1,4 +1,31 @@
 import React from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { validateTicket } from '../../lib/supabase';
+import {
+  Camera,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader2,
+  Keyboard,
+  Plus,
+  Search,
+  ScanLine,
+  ChevronRight,
+  Globe,
+  IndianRupee,
+  TrendingUp,
+  Calendar,
+  CreditCard,
+  Zap,
+  Clock,
+  History,
+  TrendingDown,
+  Info,
+  KeyRound,
+  PlusCircle,
+  Headset
+} from 'lucide-react';
 
 export const WithdrawPage: React.FC = () => {
   const rows = [
@@ -39,74 +66,71 @@ export const WithdrawPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-white">Withdraw</h2>
-          <p className="text-xs text-slate-400">
-            View your withdraw requests and current wallet balance.
+          <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Financial Withdraw</h2>
+          <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+            Securely extract your earnings to verified bank nodes.
           </p>
         </div>
-        <button className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold rounded-lg px-6 py-2 text-xs">
-          + Withdraw Now
+        <button className="px-8 py-3.5 bg-[#38B000] text-white font-black rounded-2xl text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#38B000] transition-all shadow-2xl shadow-green-500/20 active:scale-95 italic flex items-center gap-3">
+          <Plus size={16} /> Withdraw Now
         </button>
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-[#050716] p-6 text-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-slate-300">
-            <span className="text-slate-400 mr-1">My Balance:</span>
-            <span className="font-semibold text-emerald-300">₹ 48,373.10</span>
-          </p>
+      <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3rem] border border-white/5 p-10 overflow-hidden shadow-2xl relative">
+        <div className="flex items-center justify-between mb-10 relative z-10">
           <div className="flex items-center gap-3">
-            <label className="text-slate-400">Show</label>
-            <select className="bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-2 py-1 text-[11px]">
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
+            <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Total Terminal Balance</span>
+            <span className="text-2xl font-black text-[#38B000] italic">₹ 48,373.10</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <label className="text-[10px] font-black text-white/20 uppercase tracking-widest">Display</label>
+            <select className="bg-white/5 border border-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest rounded-xl px-4 py-2 outline-none">
+              <option className="bg-[#050716]">10</option>
+              <option className="bg-[#050716]">25</option>
+              <option className="bg-[#050716]">50</option>
             </select>
-            <span className="text-slate-400">entries</span>
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-[#050716] overflow-hidden">
-          <table className="w-full text-xs">
-            <thead className="bg-[#080c1f] text-slate-400">
-              <tr>
-                <th className="text-left px-6 py-3 font-medium">Withdraw ID</th>
-                <th className="text-left px-4 py-3 font-medium">Method Name</th>
-                <th className="text-left px-4 py-3 font-medium">Total Amount</th>
-                <th className="text-left px-4 py-3 font-medium">Total Charge</th>
-                <th className="text-left px-4 py-3 font-medium">
-                  Total Receivable Amount
-                </th>
-                <th className="text-left px-4 py-3 font-medium">Status</th>
-                <th className="text-right px-6 py-3 font-medium">Action</th>
+        <div className="rounded-[2.5rem] border border-white/5 bg-black/20 overflow-hidden">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-white/5">
+                <th className="px-8 py-5">Withdraw ID</th>
+                <th className="px-6 py-5">Method</th>
+                <th className="px-6 py-5">Amount</th>
+                <th className="px-6 py-5">Charge</th>
+                <th className="px-6 py-5">Receivable</th>
+                <th className="px-6 py-5">Status</th>
+                <th className="px-8 py-5 text-right">Action Hub</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {rows.map((r) => (
                 <tr
                   key={r.id}
-                  className="border-t border-slate-800/70 hover:bg-[#080c1f]/60 transition-colors"
+                  className="hover:bg-white/5 transition-colors group"
                 >
-                  <td className="px-6 py-3 text-slate-200">{r.id}</td>
-                  <td className="px-4 py-3 text-slate-200">{r.method}</td>
-                  <td className="px-4 py-3 text-slate-200">₹ {r.totalAmount}</td>
-                  <td className="px-4 py-3 text-slate-200">₹ {r.totalCharge}</td>
-                  <td className="px-4 py-3 text-slate-200">₹ {r.receivable}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-8 py-6 text-[11px] font-black text-white/60 font-mono italic">{r.id}</td>
+                  <td className="px-6 py-6 font-black text-white text-[11px] uppercase tracking-widest italic">{r.method}</td>
+                  <td className="px-6 py-6 font-black text-white text-[11px]">₹ {r.totalAmount}</td>
+                  <td className="px-6 py-6 font-black text-[#FF006E] text-[11px]">₹ {r.totalCharge}</td>
+                  <td className="px-6 py-6 font-black text-[#38B000] text-[11px]">₹ {r.receivable}</td>
+                  <td className="px-6 py-6">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold ${statusClass(
+                      className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border ${statusClass(
                         r.status,
                       )}`}
                     >
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-right">
-                    <button className="inline-flex items-center px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-[#101632] text-slate-200 hover:bg-[#161d3c] border border-slate-700/60">
-                      View
+                  <td className="px-8 py-6 text-right">
+                    <button className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 hover:bg-white hover:text-black hover:scale-105 transition-all shadow-xl active:scale-95 italic">
+                      Verify Details
                     </button>
                   </td>
                 </tr>
@@ -230,66 +254,67 @@ const transactionStatusClass = (status: TransactionStatus) =>
     : 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
 
 export const TransactionsPage: React.FC = () => (
-  <div className="space-y-6">
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
       <div>
-        <h2 className="text-lg font-semibold text-white">Transactions</h2>
-        <p className="text-xs text-slate-400">
-          Transactions generated from event bookings and withdrawals.
+        <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Audit Ledger</h2>
+        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+          End-to-end telemetry of all financial mutations across global nodes.
         </p>
       </div>
-      <div className="w-full md:w-80">
-        <input
-          type="text"
-          placeholder="Enter Transaction Id"
-          className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-xs placeholder:text-slate-500"
-        />
+      <div className="w-full md:w-96">
+        <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 flex items-center gap-4 backdrop-blur-xl group focus-within:border-white/30 transition-all shadow-2xl shadow-black/40">
+          <Search size={16} className="text-white/20 group-focus-within:text-white transition-colors" />
+          <input
+            type="text"
+            placeholder="SECURE SEARCH BY TXID // PAYLOAD"
+            className="w-full bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-white placeholder:text-white/10 outline-none border-none"
+          />
+        </div>
       </div>
     </div>
 
-    <div className="rounded-xl border border-slate-800 bg-[#050716] overflow-hidden text-xs">
-      <table className="w-full">
-        <thead className="bg-[#080c1f] text-slate-400">
-          <tr>
-            <th className="text-left px-6 py-3 font-medium">Transaction Id</th>
-            <th className="text-left px-4 py-3 font-medium">Transaction Type</th>
-            <th className="text-left px-4 py-3 font-medium">Payment Method</th>
-            <th className="text-left px-4 py-3 font-medium">Pre Balance</th>
-            <th className="text-left px-4 py-3 font-medium">Amount</th>
-            <th className="text-left px-4 py-3 font-medium">After Balance</th>
-            <th className="text-left px-4 py-3 font-medium">Status</th>
-            <th className="text-right px-6 py-3 font-medium">Actions</th>
+    <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 overflow-hidden shadow-2xl">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="bg-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-white/5">
+            <th className="px-10 py-7">Mutation Origin</th>
+            <th className="px-8 py-7">Methodology</th>
+            <th className="px-8 py-7">Pre-Balance</th>
+            <th className="px-8 py-7">Quantum</th>
+            <th className="px-8 py-7">Post-Balance</th>
+            <th className="px-8 py-7">Integrity</th>
+            <th className="px-10 py-7 text-right">Action Hub</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-white/5">
           {TRANSACTIONS.map((t) => (
             <tr
               key={t.id}
-              className="border-t border-slate-800/70 hover:bg-[#080c1f]/60 transition-colors"
+              className="hover:bg-white/5 transition-colors group"
             >
-              <td className="px-6 py-3 text-slate-200">{t.id}</td>
-              <td className="px-4 py-3 text-slate-200">{t.type}</td>
-              <td className="px-4 py-3 text-slate-200">{t.method}</td>
-              <td className="px-4 py-3 text-slate-200">₹ {t.preBalance.toFixed(2)}</td>
-              <td className="px-4 py-3 text-slate-200">
-                {t.amount >= 0 ? '(+) ' : '(-) '}₹
-                {Math.abs(t.amount).toFixed(2)}
+              <td className="px-10 py-8 text-[11px] font-black text-white/60 font-mono italic">{t.id}</td>
+              <td className="px-8 py-8">
+                <div className="font-black text-white text-[12px] uppercase tracking-widest italic leading-none">{t.type}</div>
+                <div className="text-[9px] font-bold text-white/20 mt-2 uppercase tracking-[0.2em]">{t.method}</div>
               </td>
-              <td className="px-4 py-3 text-slate-200">
-                ₹ {t.afterBalance.toFixed(2)}
+              <td className="px-8 py-8 font-black text-white/60 text-[11px]">₹ {t.preBalance.toFixed(2)}</td>
+              <td className={`px-8 py-8 font-black text-[12px] italic ${t.amount >= 0 ? 'text-[#38B000]' : 'text-[#FF006E]'}`}>
+                {t.amount >= 0 ? '+' : '-'} ₹{Math.abs(t.amount).toFixed(2)}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-8 py-8 font-black text-white text-[12px]">₹ {t.afterBalance.toFixed(2)}</td>
+              <td className="px-8 py-8">
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold ${transactionStatusClass(
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border ${transactionStatusClass(
                     t.status,
                   )}`}
                 >
-                  {t.status === 'PAID' ? 'Paid' : 'Unpaid'}
+                  {t.status === 'PAID' ? 'Verified' : 'Pending'}
                 </span>
               </td>
-              <td className="px-6 py-3 text-right">
-                <button className="inline-flex items-center px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-[#4f46e5] text-white hover:bg-[#6366f1]">
-                  View
+              <td className="px-10 py-8 text-right">
+                <button className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/10 hover:bg-white hover:text-black hover:scale-105 transition-all shadow-xl active:scale-95 italic">
+                  Select
                 </button>
               </td>
             </tr>
@@ -300,9 +325,7 @@ export const TransactionsPage: React.FC = () => (
   </div>
 );
 
-import { Html5Qrcode } from 'html5-qrcode';
-import { validateTicket } from '../../lib/supabase';
-import { Camera, CheckCircle2, XCircle, AlertCircle, Loader2, Keyboard } from 'lucide-react';
+
 
 export const PwaScannerPage: React.FC = () => {
   const [scanResult, setScanResult] = React.useState<any>(null);
@@ -326,10 +349,8 @@ export const PwaScannerPage: React.FC = () => {
   };
 
   const startScanner = async () => {
-    // SECURITY CHECK: Browsers block camera access on non-secure origins (HTTP)
-    // unless it is localhost. IP addresses like 192.168.x.x require HTTPS.
     if (!window.isSecureContext) {
-      setError("Secure Context Required: The camera only works over HTTPS or localhost. If you are testing on a different device, please use an HTTPS tunnel (like ngrok) or access via localhost.");
+      setError("Secure Context Required: The camera only works over HTTPS or localhost.");
       return;
     }
 
@@ -338,25 +359,17 @@ export const PwaScannerPage: React.FC = () => {
     setError(null);
     setScanResult(null);
 
-    // Give React a moment to render the #reader div
     setTimeout(async () => {
       try {
         const scanner = new Html5Qrcode("reader");
         scannerRef.current = scanner;
-
-        // Try to get cameras if we haven't yet
         const devices = await Html5Qrcode.getCameras();
         setCameras(devices);
 
-        let config = { facingMode: "environment" };
-
-        // If we have a specific camera selected, use it
-        // Or if we only have one camera, use its ID directly to be more specific
         let targetDevice: any = null;
         if (selectedCameraId) {
           targetDevice = selectedCameraId;
         } else if (devices.length > 0) {
-          // If multiple cameras, prioritize back camera
           const backCamera = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
           targetDevice = backCamera ? backCamera.id : devices[0].id;
         }
@@ -390,9 +403,7 @@ export const PwaScannerPage: React.FC = () => {
     validate(decodedText);
   };
 
-  const onScanFailure = (error: any) => {
-    // Silent fail for scanning frames
-  };
+  const onScanFailure = (error: any) => { };
 
   const validate = async (code: string) => {
     setIsValidating(true);
@@ -423,53 +434,53 @@ export const PwaScannerPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto pb-20">
+    <div className="space-y-10 animate-in fade-in duration-700 max-w-4xl mx-auto pb-20">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2 italic tracking-tight">Scanner Command Center</h2>
-        <p className="text-xs text-slate-500 uppercase tracking-[0.2em]">
-          Real-time Attendance Validation
+        <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase mb-2">Scanner Command</h2>
+        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
+          Real-time Attendance Validation Node
         </p>
       </div>
 
-      <div className="bg-[#050716] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+      <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[4rem] overflow-hidden shadow-2xl relative">
         {/* State: Initial Selection */}
         {!isScannerActive && !isManualMode && !scanResult && !error && !isValidating && (
-          <div className="p-12 text-center">
-            <div className="mb-10 relative">
-              <div className="w-24 h-24 bg-amber-500/10 rounded-3xl flex items-center justify-center mx-auto text-amber-500 rotate-3 border border-amber-500/20">
-                <Camera size={48} />
+          <div className="p-20 text-center">
+            <div className="mb-12 relative flex justify-center">
+              <div className="w-32 h-32 bg-[#FFB703]/10 rounded-[2.5rem] flex items-center justify-center text-[#FFB703] rotate-3 border border-[#FFB703]/20 shadow-2xl">
+                <Camera size={56} />
               </div>
-              <div className="absolute -bottom-2 -right-4 w-12 h-12 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center text-slate-400 rotate-12">
-                <Keyboard size={20} />
+              <div className="absolute -bottom-4 right-[35%] w-14 h-14 bg-slate-900 border border-white/10 rounded-2xl flex items-center justify-center text-white/40 -rotate-12 backdrop-blur-3xl">
+                <Keyboard size={24} />
               </div>
             </div>
 
-            <h3 className="text-xl font-bold text-slate-200 mb-2">Ready to scan tickets?</h3>
-            <p className="text-xs text-slate-500 mb-10 max-w-xs mx-auto">
-              Select your preferred method to validate attendee QR codes or manual IDs.
+            <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase mb-3">Syncing Ready.</h3>
+            <p className="text-[11px] font-black text-white/30 mb-12 max-w-xs mx-auto uppercase tracking-widest">
+              Select validation methodology to begin node synchronization.
             </p>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-6">
               <button
                 onClick={startScanner}
-                className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-black rounded-2xl py-5 text-sm transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"
+                className="bg-[#38B000] hover:bg-white hover:text-[#38B000] text-white font-black rounded-3xl py-6 text-[11px] uppercase tracking-[0.2em] transition-all shadow-2xl shadow-green-500/20 flex items-center justify-center gap-4 active:scale-95 italic"
               >
-                <Camera size={20} />
-                LAUNCH CAMERA SCANNER
+                <Camera size={22} />
+                INITIALIZE CAMERA SCANNER
               </button>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <button
                   onClick={() => setIsManualMode(true)}
-                  className="bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold rounded-2xl py-4 text-[10px] transition-all border border-slate-800 flex items-center justify-center gap-2 uppercase tracking-wider"
+                  className="bg-white/5 hover:bg-white/10 text-white/60 font-black rounded-3xl py-5 text-[10px] transition-all border border-white/10 flex items-center justify-center gap-3 uppercase tracking-widest italic"
                 >
-                  <Keyboard size={14} />
-                  Manual Code
+                  <Keyboard size={16} />
+                  Manual Entry
                 </button>
 
-                <label className="bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold rounded-2xl py-4 text-[10px] transition-all border border-slate-800 flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer">
-                  <Camera size={14} />
-                  Scan Image
+                <label className="bg-white/5 hover:bg-white/10 text-white/60 font-black rounded-3xl py-5 text-[10px] transition-all border border-white/10 flex items-center justify-center gap-3 uppercase tracking-widest italic cursor-pointer">
+                  <ScanLine size={16} />
+                  Scan Files
                   <input
                     type="file"
                     accept="image/*"
@@ -477,10 +488,8 @@ export const PwaScannerPage: React.FC = () => {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-
                       setIsValidating(true);
                       setError(null);
-
                       try {
                         const scanner = new Html5Qrcode("reader");
                         const decodedText = await scanner.scanFile(file, true);
@@ -499,49 +508,51 @@ export const PwaScannerPage: React.FC = () => {
 
         {/* State: Camera Active */}
         {isScannerActive && (
-          <div className="p-6 bg-slate-950">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Scanner Active</span>
+          <div className="p-10 bg-black/40">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+                <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">Live Telemetry Active // Node #0x32</span>
               </div>
-              <button onClick={resetAll} className="text-[10px] font-bold text-rose-400 uppercase hover:underline">Exit</button>
+              <button onClick={resetAll} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
+                <XCircle size={20} />
+              </button>
             </div>
-            <div id="reader" className="overflow-hidden rounded-2xl border-2 border-slate-800 bg-black min-h-[300px]"></div>
-            <p className="mt-6 text-[11px] text-slate-500 text-center italic">
-              Position the QR code within the focus area to scan automatically.
+            <div id="reader" className="overflow-hidden rounded-[3rem] border border-white/10 bg-slate-900 shadow-inner min-h-[400px]"></div>
+            <p className="mt-10 text-[10px] text-white/20 text-center italic font-black uppercase tracking-widest">
+              Center the cryptographically signed QR within focus area.
             </p>
           </div>
         )}
 
         {/* State: Manual Mode */}
         {isManualMode && !isValidating && !scanResult && (
-          <div className="p-12 text-center space-y-8">
-            <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto text-blue-400 mb-4">
-              <Keyboard size={32} />
+          <div className="p-20 text-center space-y-10">
+            <div className="w-20 h-20 bg-[#219EBC]/10 rounded-3xl flex items-center justify-center mx-auto text-[#219EBC] mb-6 border border-[#219EBC]/20">
+              <Keyboard size={36} />
             </div>
-            <h3 className="text-lg font-bold text-white">Manual Entry</h3>
-            <form onSubmit={handleManualSubmit} className="space-y-4 max-w-sm mx-auto">
+            <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase">Manual Entry Protocol</h3>
+            <form onSubmit={handleManualSubmit} className="space-y-6 max-w-sm mx-auto">
               <input
                 autoFocus
                 type="text"
-                placeholder="Enter Ticket ID or QR String"
-                className="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-4 text-center text-white font-mono focus:border-amber-500 outline-none transition-all"
+                placeholder="INPUT TICKET_ID // STRING"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-center text-white font-black italic text-[15px] focus:border-[#219EBC] outline-none transition-all placeholder:text-white/10 uppercase tracking-widest"
                 value={manualCode}
                 onChange={e => setManualCode(e.target.value)}
               />
               <button
                 type="submit"
-                className="w-full bg-amber-500 text-slate-900 font-black rounded-xl py-4 text-xs tracking-widest uppercase shadow-lg shadow-amber-500/10"
+                className="w-full bg-[#219EBC] text-white font-black rounded-2xl py-5 text-[10px] tracking-widest uppercase shadow-2xl shadow-blue-500/20 hover:bg-white hover:text-[#219EBC] transition-all italic active:scale-95"
               >
-                Validate Ticket
+                Validate Identity
               </button>
               <button
                 type="button"
                 onClick={resetAll}
-                className="w-full text-slate-500 text-[10px] uppercase font-bold tracking-widest py-2"
+                className="w-full text-white/20 text-[9px] uppercase font-black tracking-[0.3em] py-4 hover:text-white transition-colors"
               >
-                Back to Options
+                RETURN TO GRID
               </button>
             </form>
           </div>
@@ -549,106 +560,108 @@ export const PwaScannerPage: React.FC = () => {
 
         {/* State: Loading */}
         {isValidating && (
-          <div className="p-24 text-center space-y-6">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-slate-800 border-t-amber-500 rounded-full animate-spin mx-auto" />
-              <Loader2 className="absolute inset-0 m-auto text-amber-500 w-6 h-6 animate-pulse" />
+          <div className="p-32 text-center space-y-8 animate-pulse">
+            <div className="relative flex justify-center">
+              <div className="w-20 h-20 border-4 border-white/5 border-t-[#FF006E] rounded-full animate-spin mx-auto" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="text-[#FF006E] w-8 h-8 animate-bounce" />
+              </div>
             </div>
-            <p className="text-amber-500 font-black uppercase tracking-widest text-[11px] animate-pulse">Verifying Database Records...</p>
+            <p className="text-[#FF006E] font-black uppercase tracking-[0.4em] text-[10px] italic">Verifying Global Ledger...</p>
           </div>
         )}
 
         {/* State: Success */}
         {scanResult && scanResult.success && (
-          <div className="p-10 text-center space-y-8 animate-in fade-in zoom-in-95 duration-300">
-            <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400 border border-emerald-500/30">
-              <CheckCircle2 size={56} />
+          <div className="p-16 text-center space-y-10 animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-32 h-32 bg-[#38B000]/20 rounded-[3rem] flex items-center justify-center mx-auto text-[#38B000] border border-[#38B000]/30 shadow-[0_0_50px_rgba(56,176,0,0.2)]">
+              <CheckCircle2 size={64} />
             </div>
-            <div className="space-y-2">
-              <h3 className="text-3xl font-black text-emerald-400 lowercase italic tracking-tighter">access granted.</h3>
-              <p className="text-slate-400 font-medium">{scanResult.eventName}</p>
+            <div className="space-y-3">
+              <h3 className="text-4xl font-black text-[#38B000] italic tracking-tighter uppercase leading-none">Access Granted</h3>
+              <p className="text-white/40 font-black uppercase tracking-widest text-[11px]">{scanResult.eventName}</p>
             </div>
 
-            <div className="bg-slate-900/60 rounded-3xl p-8 border border-slate-800/50 text-left space-y-4">
+            <div className="bg-white/5 rounded-[2.5rem] p-10 border border-white/10 text-left space-y-6 shadow-2xl backdrop-blur-3xl">
               <div className="flex justify-between items-end">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Attendee</span>
-                <span className="text-lg font-bold text-slate-100">{scanResult.attendee}</span>
+                <span className="text-[10px] font-black uppercase text-white/20 tracking-[0.3em]">Identity</span>
+                <span className="text-xl font-black text-white italic">{scanResult.attendee}</span>
               </div>
-              <div className="flex justify-between items-end border-t border-slate-800/50 pt-4">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Type</span>
-                <span className="text-sm font-black text-amber-500 uppercase italic bg-amber-500/5 px-3 py-1 rounded-lg border border-amber-500/20">{scanResult.ticketType}</span>
+              <div className="flex justify-between items-end border-t border-white/5 pt-6">
+                <span className="text-[10px] font-black uppercase text-white/20 tracking-[0.3em]">Protocol</span>
+                <span className="text-[10px] font-black text-[#FFB703] uppercase italic bg-[#FFB703]/10 px-4 py-2 rounded-xl border border-[#FFB703]/20">{scanResult.ticketType}</span>
               </div>
-              <div className="flex justify-between items-end border-t border-slate-800/50 pt-4">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Time</span>
-                <span className="text-sm font-bold text-slate-300">{new Date(scanResult.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <div className="flex justify-between items-end border-t border-white/5 pt-6">
+                <span className="text-[10px] font-black uppercase text-white/20 tracking-[0.3em]">Timestamp</span>
+                <span className="text-lg font-black text-white/60 font-mono italic">{new Date(scanResult.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             </div>
 
             <button
               onClick={resetAll}
-              className="w-full bg-slate-100 hover:bg-white text-slate-900 font-black rounded-2xl py-5 text-sm transition-all shadow-xl active:scale-95"
+              className="w-full bg-white text-black font-black rounded-3xl py-6 text-[11px] uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105 active:scale-95 italic"
             >
-              SCAN NEXT TICKET
+              SYNC NEXT SEQUENCE
             </button>
           </div>
         )}
 
         {/* State: Double Check-in */}
         {scanResult && scanResult.alreadyUsed && (
-          <div className="p-10 text-center space-y-8">
-            <div className="w-24 h-24 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto text-rose-500 border border-rose-500/20 animate-pulse">
-              <AlertCircle size={56} />
+          <div className="p-16 text-center space-y-10">
+            <div className="w-32 h-32 bg-[#FF006E]/10 rounded-[3rem] flex items-center justify-center mx-auto text-[#FF006E] border border-[#FF006E]/20 animate-pulse shadow-[0_0_50px_rgba(255,0,110,0.1)]">
+              <AlertCircle size={64} />
             </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-rose-500 uppercase italic">Duplicate Ticket</h3>
-              <p className="text-slate-400 text-xs">Security Alert: This ticket was already validated.</p>
+            <div className="space-y-3">
+              <h3 className="text-3xl font-black text-[#FF006E] uppercase italic tracking-tighter">Collision Detected</h3>
+              <p className="text-white/30 font-black uppercase tracking-widest text-[10px]">Security Alert: Identity already synchronized.</p>
             </div>
 
-            <div className="bg-rose-500/5 rounded-3xl p-8 border border-rose-500/10 text-left space-y-4">
+            <div className="bg-[#FF006E]/5 rounded-[2.5rem] p-10 border border-[#FF006E]/10 text-left space-y-6">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-rose-500/50 uppercase tracking-widest">Original Check-in</span>
-                <span className="text-sm font-bold text-rose-400">{new Date(scanResult.checkInTime).toLocaleString()}</span>
+                <span className="text-[10px] font-black text-[#FF006E]/40 uppercase tracking-[0.3em]">Mutation Peak</span>
+                <span className="text-lg font-black text-[#FF006E]/60 italic">{new Date(scanResult.checkInTime).toLocaleString()}</span>
               </div>
             </div>
 
             <button
               onClick={resetAll}
-              className="w-full bg-rose-500 hover:bg-rose-400 text-white font-black rounded-2xl py-5 text-sm transition-all shadow-xl active:scale-95"
+              className="w-full bg-[#FF006E] hover:bg-white hover:text-[#FF006E] text-white font-black rounded-3xl py-6 text-[11px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 italic"
             >
-              TRY ANOTHER
+              REBOOT SCANNER
             </button>
           </div>
         )}
 
         {/* State: Error */}
         {error && (
-          <div className="p-12 text-center space-y-8 animate-in slide-in-from-top-4 duration-300">
-            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto text-rose-400 border border-slate-800">
-              <XCircle size={40} />
+          <div className="p-20 text-center space-y-10 animate-in slide-in-from-top-4 duration-500">
+            <div className="w-24 h-24 bg-slate-900 rounded-[2rem] flex items-center justify-center mx-auto text-[#FF006E] border border-white/10 shadow-2xl">
+              <XCircle size={48} />
             </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-white uppercase italic">Validation Error</h3>
-              <p className="text-rose-400 text-sm font-medium px-4">{error}</p>
+            <div className="space-y-3">
+              <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Protocol Failure</h3>
+              <p className="text-[#FF006E] text-[10px] font-black uppercase tracking-widest px-6 italic">{error}</p>
             </div>
             <button
               onClick={resetAll}
-              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-black rounded-2xl py-5 text-sm transition-all"
+              className="w-full bg-white/10 hover:bg-white hover:text-black text-white font-black rounded-3xl py-6 text-[11px] uppercase tracking-[0.2em] transition-all italic border border-white/10"
             >
-              RESTART SCANNER
+              INITIALIZE RETRY
             </button>
           </div>
         )}
       </div>
 
       {/* Helper Bar */}
-      <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl flex items-start gap-4">
-        <div className="w-10 h-10 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 shrink-0">
-          <AlertCircle size={20} />
+      <div className="p-10 bg-slate-900/40 backdrop-blur-2xl border border-white/5 rounded-[3rem] flex items-start gap-8 shadow-2xl">
+        <div className="w-14 h-14 bg-[#FFB703]/10 rounded-2xl flex items-center justify-center text-[#FFB703] shrink-0 border border-[#FFB703]/20 shadow-xl">
+          <AlertCircle size={24} />
         </div>
-        <div className="space-y-1">
-          <p className="text-[10px] font-black text-white uppercase tracking-widest">Validation Tips</p>
-          <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-            Ensure adequate lighting for camera scans. If a QR code is too damaged to read, use the <span className="text-amber-500">Manual Entry</span> mode to input the ticket identifier directly.
+        <div className="space-y-2">
+          <p className="text-[10px] font-black text-white italic uppercase tracking-[0.4em]">Sector Guidelines</p>
+          <p className="text-xs text-white/30 leading-relaxed font-bold uppercase tracking-widest">
+            Ensure photon intensity for optimal camera data extraction. If QR node integrity is compromised, utilize the <span className="text-[#FFB703]">Manual Entry Pulse</span> to input the cryptographic attendee hash directly.
           </p>
         </div>
       </div>
@@ -691,53 +704,62 @@ const SUPPORT_TICKETS: SupportTicketRow[] = [
 ];
 
 export const SupportTicketsListPage: React.FC = () => (
-  <div className="space-y-6">
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
       <div>
-        <h2 className="text-lg font-semibold text-white">All Tickets</h2>
-        <p className="text-xs text-slate-400">
-          All support tickets raised for your organiser account.
+        <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Support Hub</h2>
+        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+          Monitoring real-time ticket mutations and resolution protocols.
         </p>
       </div>
-      <div className="w-full md:w-64">
-        <input
-          type="text"
-          placeholder="Search by Ticket ID"
-          className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-xs placeholder:text-slate-500"
-        />
+      <div className="flex items-center gap-4">
+        <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-3.5 flex items-center gap-4 backdrop-blur-xl">
+          <Search size={16} className="text-white/20" />
+          <input
+            type="text"
+            placeholder="FILTER BY TICKET_ID"
+            className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-white placeholder:text-white/10 outline-none border-none w-48"
+          />
+        </div>
+        <button className="px-8 py-3.5 bg-[#FF006E] text-white font-black rounded-2xl text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#FF006E] transition-all shadow-2xl shadow-[#FF006E]/20 active:scale-95 italic flex items-center gap-3">
+          <PlusCircle size={16} /> New Ticket
+        </button>
       </div>
     </div>
-    <div className="rounded-xl border border-slate-800 bg-[#050716] overflow-hidden text-xs">
-      <table className="w-full">
-        <thead className="bg-[#080c1f] text-slate-400">
-          <tr>
-            <th className="text-left px-6 py-3 font-medium">Ticket ID</th>
-            <th className="text-left px-4 py-3 font-medium">Email</th>
-            <th className="text-left px-4 py-3 font-medium">Subject</th>
-            <th className="text-left px-4 py-3 font-medium">Status</th>
-            <th className="text-right px-6 py-3 font-medium">Action</th>
+
+    <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 overflow-hidden shadow-2xl">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="bg-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-white/5">
+            <th className="px-10 py-7">Ticket Identity</th>
+            <th className="px-8 py-7">Origin Email</th>
+            <th className="px-8 py-7">Subject Vector</th>
+            <th className="px-8 py-7">Resolution Status</th>
+            <th className="px-10 py-7 text-right">Action Hub</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-white/5">
           {SUPPORT_TICKETS.map((t) => (
             <tr
               key={t.id}
-              className="border-t border-slate-800/70 hover:bg-[#080c1f]/60 transition-colors"
+              className="hover:bg-white/5 transition-colors group"
             >
-              <td className="px-6 py-3 text-slate-200">{t.id}</td>
-              <td className="px-4 py-3 text-slate-200">{t.email}</td>
-              <td className="px-4 py-3 text-slate-200">{t.subject}</td>
-              <td className="px-4 py-3">
+              <td className="px-10 py-8 text-[11px] font-black text-white/60 font-mono italic">#{t.id}</td>
+              <td className="px-8 py-8 text-[11px] font-black text-white uppercase tracking-widest italic">{t.email}</td>
+              <td className="px-8 py-8">
+                <div className="font-black text-white text-[13px] italic leading-tight">{t.subject}</div>
+              </td>
+              <td className="px-8 py-8">
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold ${TICKET_STATUS_CLASSES[t.status]
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border ${TICKET_STATUS_CLASSES[t.status]
                     }`}
                 >
                   {t.status}
                 </span>
               </td>
-              <td className="px-6 py-3 text-right">
-                <button className="inline-flex items-center px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-[#4f46e5] text-white hover:bg-[#6366f1]">
-                  Select
+              <td className="px-10 py-8 text-right">
+                <button className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 hover:bg-white hover:text-black hover:scale-105 transition-all shadow-xl active:scale-95 italic">
+                  Inspect Node
                 </button>
               </td>
             </tr>
@@ -749,63 +771,62 @@ export const SupportTicketsListPage: React.FC = () => (
 );
 
 export const SupportTicketsAddPage: React.FC = () => (
-  <div className="space-y-6 max-w-3xl">
+  <div className="space-y-10 animate-in fade-in duration-700 max-w-4xl">
     <div>
-      <h2 className="text-lg font-semibold text-white">Add Ticket</h2>
-      <p className="text-xs text-slate-400">
-        Create a new support ticket for issues related to bookings or payouts.
+      <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">New Support Request</h2>
+      <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+        Initiate a Resolution Sequence for technical or financial anomalies.
       </p>
     </div>
-    <form className="rounded-xl border border-slate-800 bg-[#050716] p-6 space-y-4 text-xs">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">
-            Email*
+    <form className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-12 space-y-8 shadow-2xl relative overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+            Identity Email
           </label>
           <input
             type="email"
-            className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+            className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#FF006E] transition-all text-[13px] tracking-widest"
             defaultValue="organizer@gmail.com"
           />
         </div>
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">
-            Subject*
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+            Subject Vector
           </label>
           <input
             type="text"
-            className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-            placeholder="Enter subject"
+            className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#FF006E] transition-all text-[13px] tracking-widest"
+            placeholder="Critical Issue // Mutation Error"
           />
         </div>
       </div>
-      <div>
-        <label className="block text-[11px] text-slate-400 mb-1">
-          Description
+      <div className="space-y-2">
+        <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+          Problem Payload
         </label>
         <textarea
-          className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2 min-h-[120px]"
-          placeholder="Describe the issue in detail..."
+          className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-[2rem] px-6 py-6 min-h-[180px] outline-none focus:border-[#FF006E] transition-all text-[13px] tracking-widest no-scrollbar"
+          placeholder="Detailed anomaly report and sequence of occurrences..."
         />
       </div>
-      <div className="space-y-2">
-        <label className="block text-[11px] text-slate-400 mb-1">
-          Attachment
+      <div className="space-y-4">
+        <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+          Evidence Attachment
         </label>
-        <input
-          type="file"
-          className="block w-full text-xs text-slate-300 file:mr-3 file:px-3 file:py-1.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#1e293b] file:text-slate-100"
-        />
-        <p className="text-[11px] text-slate-500">
-          Upload only ZIP files, Max file size is 20 MB.
+        <div className="relative group">
+          <input
+            type="file"
+            className="block w-full text-[11px] font-black text-white/40 uppercase tracking-[0.2em] file:mr-6 file:px-8 file:py-4 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:bg-white/10 file:text-white file:cursor-pointer hover:file:bg-white hover:file:text-black transition-all"
+          />
+        </div>
+        <p className="text-[9px] text-white/10 font-black uppercase tracking-[0.3em] px-4">
+          Allowed: .ZIP .LOG .IMG | Max Size: 20 MB
         </p>
       </div>
-      <div className="pt-4">
-        <button
-          type="submit"
-          className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold rounded-lg px-8 py-2 text-xs"
-        >
-          Save
+      <div className="pt-6">
+        <button className="w-full py-5 bg-[#FF006E] text-white font-black rounded-3xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-pink-500/20 hover:bg-white hover:text-[#FF006E] transition-all italic active:scale-95">
+          Submit Resolution Protocol
         </button>
       </div>
     </form>
@@ -816,192 +837,151 @@ export const SupportTicketsAddPage: React.FC = () => (
 export const SupportTicketsPage = SupportTicketsListPage;
 
 export const OrganiserProfilePage: React.FC = () => (
-  <div className="space-y-6">
+  <div className="space-y-10 animate-in fade-in duration-700 max-w-5xl">
     <div>
-      <h2 className="text-lg font-semibold text-white">Edit Profile</h2>
-      <p className="text-xs text-slate-400">
-        Manage your public organiser profile information and contact details.
+      <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Global Profile Registry</h2>
+      <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+        Encryption of your public identity across the coordinate system.
       </p>
     </div>
-    <form className="rounded-xl border border-slate-800 bg-[#050716] p-6 space-y-6 text-xs">
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-28 h-28 rounded-full bg-slate-700/40 flex items-center justify-center text-slate-300 text-xs">
+    <form className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-12 space-y-10 shadow-2xl relative overflow-hidden">
+      <div className="flex flex-col md:flex-row gap-12 items-start">
+        <div className="flex flex-col items-center gap-6 group">
+          <div className="w-32 h-32 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/10 text-[10px] font-black uppercase tracking-widest relative overflow-hidden shadow-2xl transition-all group-hover:border-white/30">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             300 x 300
           </div>
           <button
             type="button"
-            className="px-4 py-2 rounded-lg bg-[#1e293b] text-slate-100 font-semibold text-[11px]"
+            className="px-6 py-2.5 rounded-xl bg-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all border border-white/10 italic"
           >
-            Choose Photo
+            Upload Photo
           </button>
-          <p className="text-[10px] text-slate-500 max-w-[140px] text-center">
-            Image size 300x300
+          <p className="text-[9px] text-white/10 font-black uppercase tracking-[0.3em] text-center max-w-[120px]">
+            Node Identity Capture
           </p>
         </div>
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Email*
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+              Communication Relay (Email)
             </label>
             <input
               type="email"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="organizer@gmail.com"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Phone
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+              Voice Frequency (Phone)
             </label>
             <input
               type="tel"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="456 372989"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Facebook
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+              Social Vector (Facebook)
             </label>
             <input
               type="url"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="https://www.facebook.com/"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Twitter
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+              Social Vector (LinkedIn)
             </label>
             <input
               type="url"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-              defaultValue="https://www.twitter.com/"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              LinkedIn
-            </label>
-            <input
-              type="url"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="https://www.linkedin.com/"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Username*
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">
+              Global Hash (Username)
             </label>
             <input
               type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="organizer"
             />
           </div>
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-[#020617]/40">
-        <div className="px-4 py-2 bg-[#1d2144] text-[11px] font-semibold text-slate-100">
-          English Language (Default)
+      <div className="rounded-[2.5rem] border border-white/5 bg-white/5 overflow-hidden">
+        <div className="px-8 py-5 bg-white/5 text-[10px] font-black text-white/40 uppercase tracking-[0.4em] italic border-b border-white/5">
+          Localization Protocol: English (Primary)
         </div>
-        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Name*
-            </label>
+        <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8 font-black flex-wrap">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Legal Alias*</label>
             <input
               type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="Robert L. Murray"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Designation
-            </label>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Corporate Role</label>
             <input
               type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="Chief Executive Officer"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Country
-            </label>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Territory (Country)</label>
             <input
               type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="United States"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              City
-            </label>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Coordinate City</label>
             <input
               type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="Rocksburo"
             />
           </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              State
-            </label>
+          <div className="md:col-span-2 space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Full Address Mapping</label>
             <input
               type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-              defaultValue="North Carolina"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Zip Code
-            </label>
-            <input
-              type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-              defaultValue="02580"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Address
-            </label>
-            <input
-              type="text"
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl px-6 py-4 outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest"
               defaultValue="Rocksboro, North Carolina, United States"
             />
           </div>
-          <div className="md:col-span-2">
-            <label className="block text-[11px] text-slate-400 mb-1">
-              Details
-            </label>
+          <div className="md:col-span-2 space-y-2">
+            <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Operational Summary</label>
             <textarea
-              className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2 min-h-[120px]"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-[2rem] px-8 py-6 min-h-[140px] outline-none focus:border-[#7209B7] transition-all text-[13px] tracking-widest no-scrollbar"
               defaultValue="Lorem ipsum is a pseudo-Latin text used in web design, typography, layout, and printing in place of English to emphasise design elements over content."
             />
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex justify-end gap-6 pt-6">
         <button
           type="button"
-          className="border border-slate-700 text-slate-300 hover:bg-[#0a0f24] rounded-lg px-4 py-2"
+          className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-all italic underline decoration-white/10 underline-offset-8"
         >
-          Cancel
+          Cancel Mutation
         </button>
         <button
           type="submit"
-          className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold rounded-lg px-6 py-2"
+          className="px-10 py-4 bg-[#7209B7] text-white font-black rounded-2xl text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#7209B7] transition-all shadow-2xl shadow-purple-500/20 italic active:scale-95"
         >
-          Update
+          Synchronize Changes
         </button>
       </div>
     </form>
@@ -1009,53 +989,61 @@ export const OrganiserProfilePage: React.FC = () => (
 );
 
 export const ChangePasswordPage: React.FC = () => (
-  <div className="space-y-6 max-w-md">
+  <div className="space-y-10 animate-in fade-in duration-700 max-w-2xl">
     <div>
-      <h2 className="text-lg font-semibold text-white">Change Password</h2>
-      <p className="text-xs text-slate-400">
-        Secure your organiser account by updating your password regularly.
+      <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Access Protocol Update</h2>
+      <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+        Refreshing cryptographic node keys for maximum security persistence.
       </p>
     </div>
-    <form className="rounded-xl border border-slate-800 bg-[#050716] p-6 space-y-4 text-xs">
-      <div>
-        <label className="block text-[11px] text-slate-400 mb-1">
-          Current Password
-        </label>
-        <input
-          type="password"
-          className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-        />
+    <form className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-12 space-y-8 shadow-2xl relative overflow-hidden">
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Current Cryptokey</label>
+          <div className="relative">
+            <KeyRound size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10" />
+            <input
+              type="password"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl pl-16 pr-6 py-4 outline-none focus:border-[#FFB703] transition-all text-[13px] tracking-widest"
+              placeholder="••••••••••••"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">New Secret Sequence</label>
+          <div className="relative">
+            <Zap size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10" />
+            <input
+              type="password"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl pl-16 pr-6 py-4 outline-none focus:border-[#FFB703] transition-all text-[13px] tracking-widest"
+              placeholder="••••••••••••"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Confirm Mutation Sequence</label>
+          <div className="relative">
+            <CheckCircle2 size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10" />
+            <input
+              type="password"
+              className="w-full bg-white/5 border border-white/10 text-white font-black italic rounded-2xl pl-16 pr-6 py-4 outline-none focus:border-[#FFB703] transition-all text-[13px] tracking-widest"
+              placeholder="••••••••••••"
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <label className="block text-[11px] text-slate-400 mb-1">
-          New Password
-        </label>
-        <input
-          type="password"
-          className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-        />
-      </div>
-      <div>
-        <label className="block text-[11px] text-slate-400 mb-1">
-          Confirm New Password
-        </label>
-        <input
-          type="password"
-          className="w-full bg-[#050716] border border-slate-700 text-slate-200 rounded-lg px-3 py-2"
-        />
-      </div>
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex justify-end gap-6 pt-4">
         <button
           type="button"
-          className="border border-slate-700 text-slate-300 hover:bg-[#0a0f24] rounded-lg px-4 py-2"
+          className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-all italic underline decoration-white/10 underline-offset-8"
         >
-          Cancel
+          Abort Protocol
         </button>
         <button
           type="submit"
-          className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg px-6 py-2"
+          className="px-10 py-4 bg-[#FFB703] text-black font-black rounded-2xl text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#FFB703] transition-all shadow-2xl shadow-yellow-500/20 italic active:scale-95"
         >
-          Update Password
+          Finalize Re-Encryption
         </button>
       </div>
     </form>

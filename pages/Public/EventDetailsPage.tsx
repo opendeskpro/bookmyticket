@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Event, User } from '../../types.ts';
-import { api } from '../../lib/api.ts';
+import { Event, User } from '../../types';
+import { api } from '../../lib/api';
 import { MapPin, Calendar, Clock, Share2, Heart, ShieldCheck, Ticket, Users, Star, MessageSquare, Send, ChevronLeft, Loader2 } from 'lucide-react';
 
 interface EventDetailsPageProps {

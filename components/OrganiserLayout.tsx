@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { User } from '../types.ts';
+import { User } from '../types';
 import {
   LayoutDashboard,
   CalendarRange,
@@ -29,7 +29,7 @@ import {
   Circle,
   Zap
 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext.tsx';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface OrganiserLayoutProps {
   user: User;
@@ -37,11 +37,11 @@ interface OrganiserLayoutProps {
 }
 
 const menuBaseClasses =
-  'flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all duration-300';
+  'flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border border-transparent';
 const menuActiveClasses =
-  'bg-white text-[#050716] shadow-[0_0_20px_rgba(255,255,255,0.1)]';
+  'bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)] border-white/10 backdrop-blur-xl scale-[1.02]';
 const menuInactiveClasses =
-  'text-slate-400 hover:bg-slate-800/30 hover:text-white';
+  'text-white/40 hover:text-white/80 hover:bg-white/5 hover:border-white/5';
 
 const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
   const navigate = useNavigate();
@@ -57,46 +57,58 @@ const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('demo_user');
     setUser(null);
     navigate('/');
   };
 
   return (
-    <div className={`min-h-screen flex bg-[#050716] text-slate-100 ${currentLanguage.isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Sidebar */}
-      <aside className="w-80 bg-[#080c1f] border-r border-slate-800/60 flex flex-col sticky top-0 h-screen overflow-hidden">
+    <div className={`min-h-screen flex text-white relative font-inter ${currentLanguage.isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Absolute Background Image Layer */}
+      <div
+        className="fixed inset-0 z-0 bg-cover bg-center transition-transform duration-[10000ms] scale-110 hover:scale-100"
+        style={{ backgroundImage: `url('file:///home/raja/.gemini/antigravity/brain/6e645366-9b22-4abc-9ec9-a36d5dd0694f/premium_sidebar_bg_1771147469027.png')` }}
+      />
+      {/* Dark Overlay with subtle noise/gradient */}
+      <div className="fixed inset-0 z-0 bg-[#050716]/90 backdrop-blur-3xl" />
+
+      {/* Sidebar - Premium Glassmorphic Theme */}
+      <aside className="w-80 relative flex-shrink-0 flex flex-col sticky top-0 h-screen overflow-hidden group z-10 border-r border-white/5 bg-slate-900/40 backdrop-blur-2xl">
+        {/* Animated Highlight Gradient */}
+        <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+
         {/* Logo Section */}
-        <div className="h-24 flex items-center px-8 flex-shrink-0">
+        <div className="h-24 flex items-center px-10 flex-shrink-0 relative">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center rotate-3 shadow-lg shadow-cyan-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7209B7] to-[#FF006E] flex items-center justify-center shadow-2xl shadow-purple-500/20 rotate-3 border border-white/20">
               <Zap className="text-white w-6 h-6 -rotate-3" />
             </div>
             <div>
-              <h1 className="text-xl font-black italic tracking-tighter text-white leading-none">
-                Book My<br />Ticket
+              <h1 className="text-xl font-black italic tracking-tighter text-white leading-none uppercase">
+                EVENTO<br /><span className="text-[9px] not-italic tracking-[0.3em] text-white/40 font-bold">ORGANISER</span>
               </h1>
-              <div className="h-1 w-full bg-gradient-to-r from-cyan-400 to-transparent rounded-full mt-1" />
             </div>
           </div>
         </div>
 
         {/* Search */}
-        <div className="px-6 py-4 border-b border-slate-800/60 flex-shrink-0">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
+        <div className="px-6 py-4 border-y border-white/5 flex-shrink-0 relative bg-white/5">
+          <div className="relative group/search">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within/search:text-white/60 transition-colors" />
             <input
               type="text"
-              placeholder="Search Menu Here..."
-              className="w-full bg-[#050716] border border-slate-800/60 rounded-xl pl-12 pr-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-200 placeholder:text-slate-600 outline-none focus:ring-1 focus:ring-cyan-400/30 focus:border-cyan-400/50 transition-all"
+              placeholder="Search Terminal..."
+              className="w-full bg-black/20 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-[10px] font-black uppercase tracking-widest text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 focus:border-white/30 transition-all"
             />
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-4 py-8 space-y-6 overflow-y-auto no-scrollbar relative">
           {/* Overview */}
           <div>
-            <p className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">
+            <p className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/40">
               Overview
             </p>
             <NavLink
@@ -112,12 +124,12 @@ const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
           <div>
             <button
               onClick={() => toggleSection('event_mgmt')}
-              className="w-full px-4 mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white transition-colors"
+              className="w-full px-4 mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white transition-colors"
             >
               <span>Event Management</span>
               <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${expandedSections.event_mgmt ? '' : '-rotate-90'}`} />
             </button>
-            <div className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedSections.event_mgmt ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`space-y-1 mt-2 transition-all duration-300 overflow-hidden ${expandedSections.event_mgmt ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
               <NavLink
                 to="/organiser/create"
                 className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
@@ -127,23 +139,23 @@ const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
               </NavLink>
               <NavLink
                 to="/organiser/events/all"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
+                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses} pl-6`}
               >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
+                <Circle className="w-1 h-1 fill-current opacity-40 mr-2" />
                 <span>All Events</span>
               </NavLink>
               <NavLink
                 to="/organiser/events/venue"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
+                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses} pl-6`}
               >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
+                <Circle className="w-1 h-1 fill-current opacity-40 mr-2" />
                 <span>Venue Events</span>
               </NavLink>
               <NavLink
                 to="/organiser/events/online"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
+                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses} pl-6`}
               >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
+                <Circle className="w-1 h-1 fill-current opacity-40 mr-2" />
                 <span>Online Events</span>
               </NavLink>
             </div>
@@ -153,52 +165,41 @@ const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
           <div>
             <button
               onClick={() => toggleSection('bookings')}
-              className="w-full px-4 mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white transition-colors"
+              className="w-full px-4 mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white transition-colors"
             >
               <span>Event Bookings</span>
               <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${expandedSections.bookings ? '' : '-rotate-90'}`} />
             </button>
-            <div className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedSections.bookings ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`space-y-1 mt-2 transition-all duration-300 overflow-hidden ${expandedSections.bookings ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
               <NavLink
                 to="/organiser/bookings/all"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
+                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses} pl-6`}
               >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
+                <Circle className="w-1 h-1 fill-current opacity-40 mr-2" />
                 <span>{t('all_bookings')}</span>
               </NavLink>
               <NavLink
                 to="/organiser/bookings/completed"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
+                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses} pl-6`}
               >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
-                <span>Completed Bookings</span>
-              </NavLink>
-              <NavLink
-                to="/organiser/bookings/pending"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
-              >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
-                <span>Pending Bookings</span>
-              </NavLink>
-              <NavLink
-                to="/organiser/bookings/rejected"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
-              >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
-                <span>Rejected Bookings</span>
+                <Circle className="w-1 h-1 fill-current opacity-40 mr-2" />
+                <span>Completed</span>
               </NavLink>
               <NavLink
                 to="/organiser/bookings/report"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
+                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses} pl-6`}
               >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
-                <span>Report</span>
+                <Circle className="w-1 h-1 fill-current opacity-40 mr-2" />
+                <span>Analytics Report</span>
               </NavLink>
             </div>
           </div>
 
           {/* Finance & Tools */}
           <div className="space-y-1">
+            <p className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/20">
+              Finance
+            </p>
             <NavLink
               to="/organiser/withdraw"
               className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
@@ -213,44 +214,13 @@ const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
               <History className="w-4 h-4" />
               <span>{t('transactions')}</span>
             </NavLink>
-            <NavLink
-              to="/organiser/pwa-scanner"
-              className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
-            >
-              <ScanLine className="w-4 h-4" />
-              <span>{t('pwa_scanner')}</span>
-            </NavLink>
           </div>
 
-          {/* Support */}
-          <div>
-            <button
-              onClick={() => toggleSection('support')}
-              className="w-full px-4 mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white transition-colors"
-            >
-              <span>Support Tickets</span>
-              <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${expandedSections.support ? '' : '-rotate-90'}`} />
-            </button>
-            <div className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedSections.support ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-              <NavLink
-                to="/organiser/support/all"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
-              >
-                <Circle className="w-2 h-2 ml-1 mr-1 fill-current" />
-                <span>{t('all_tickets')}</span>
-              </NavLink>
-              <NavLink
-                to="/organiser/support/add"
-                className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
-              >
-                <MessageSquarePlus className="w-4 h-4" />
-                <span>Add Ticket</span>
-              </NavLink>
-            </div>
-          </div>
-
-          {/* Profile & Settings */}
+          {/* Support & Profile */}
           <div className="space-y-1">
+            <p className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/20">
+              Terminal Settings
+            </p>
             <NavLink
               to="/organiser/profile"
               className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
@@ -258,16 +228,9 @@ const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
               <UserCog className="w-4 h-4" />
               <span>{t('edit_profile')}</span>
             </NavLink>
-            <NavLink
-              to="/organiser/change-password"
-              className={({ isActive }) => `${menuBaseClasses} ${isActive ? menuActiveClasses : menuInactiveClasses}`}
-            >
-              <KeyRound className="w-4 h-4" />
-              <span>{t('change_password')}</span>
-            </NavLink>
             <button
               onClick={handleLogout}
-              className={`${menuBaseClasses} ${menuInactiveClasses} w-full text-left bg-red-500/5 hover:bg-red-500/20 hover:text-red-400 border border-transparent hover:border-red-500/30`}
+              className={`${menuBaseClasses} text-white/40 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 backdrop-blur-md w-full text-left transition-all italic`}
             >
               <LogOut className="w-4 h-4" />
               <span>{t('logout')}</span>
@@ -277,50 +240,70 @@ const OrganiserLayout: React.FC<OrganiserLayoutProps> = ({ user, setUser }) => {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 border-b border-slate-800/60 flex items-center justify-between px-8 bg-[#080c1f] flex-shrink-0">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+        <header className="h-20 border-b border-white/5 flex items-center justify-between px-10 bg-slate-900/20 backdrop-blur-2xl flex-shrink-0">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-white/20 font-black">
               {t('organiser_portal')}
             </p>
-            <h1 className="text-lg font-semibold text-white">
+            <h1 className="text-xl font-black text-white italic">
               {t('welcome_back')}, {user.name}
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Language Selector */}
-            <div className="relative group">
-              <button className="flex items-center gap-2 bg-[#050716] border border-slate-800 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest hover:border-amber-500/50 transition-all text-slate-300">
-                <span>{currentLanguage.flag}</span>
-                <span>{currentLanguage.name}</span>
-                <Globe size={14} className="text-slate-500" />
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 pr-6 border-r border-white/10">
+              <button
+                onClick={() => navigate('/organiser/pwa-scanner')}
+                className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-400/30 transition-all group relative"
+                title="PWA Scanner"
+              >
+                <ScanLine size={18} />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-500 text-[8px] font-black text-white flex items-center justify-center rounded-full border-2 border-[#050716]">2</span>
               </button>
-
-              <div className="absolute right-0 top-full mt-2 w-48 bg-[#080c1f] border border-slate-800 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[200] overflow-hidden">
-                <div className="max-h-64 overflow-y-auto py-2">
-                  {languages.map(lang => (
-                    <button
-                      key={lang.code}
-                      onClick={() => setLanguage(lang.code)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-left hover:bg-[#1b2140] transition-colors ${currentLanguage.code === lang.code ? 'text-amber-500 bg-[#1b2140]/50' : 'text-slate-400'
-                        }`}
-                    >
-                      <span>{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <button
+                onClick={() => navigate('/organiser/support/all')}
+                className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-amber-400 hover:bg-amber-400/10 hover:border-amber-500/30 transition-all group"
+                title="Support Tickets"
+              >
+                <Headset size={18} />
+              </button>
             </div>
 
-            <div className="w-10 h-10 rounded-full border border-slate-800 overflow-hidden ring-2 ring-slate-800/50">
-              <img src={`https://i.pravatar.cc/100?u=${user.id}`} alt="profile" className="w-full h-full object-cover" />
+            <div className="flex items-center gap-5">
+              {/* Language Selector */}
+              <div className="relative group">
+                <button className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[9px] font-black uppercase tracking-widest hover:border-white/30 transition-all text-white/60">
+                  <span>{currentLanguage.flag}</span>
+                  <span>{currentLanguage.name}</span>
+                  <Globe size={14} className="text-white/20" />
+                </button>
+
+                <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900/90 border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[200] overflow-hidden backdrop-blur-3xl">
+                  <div className="max-h-64 overflow-y-auto py-2">
+                    {languages.map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => setLanguage(lang.code)}
+                        className={`w-full flex items-center gap-3 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-left hover:bg-white/5 transition-colors ${currentLanguage.code === lang.code ? 'text-[#FF006E] bg-white/5' : 'text-white/40'
+                          }`}
+                      >
+                        <span>{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-12 h-12 rounded-2xl border border-white/10 overflow-hidden ring-4 ring-white/5 p-1 bg-white/5">
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} alt="profile" className="w-full h-full object-cover rounded-xl" />
+              </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 bg-[#050716] overflow-y-auto p-8 scrollbar-hide">
+        <main className="flex-1 overflow-y-auto p-10 no-scrollbar">
           <Outlet />
         </main>
       </div>

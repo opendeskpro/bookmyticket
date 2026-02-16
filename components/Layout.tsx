@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, UserRole } from '../types.ts';
+import { User, UserRole } from '../types';
 import {
   LogOut,
   MapPin,
@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import LocationModal from './LocationModal';
 import SideMenu from './SideMenu';
+import { supabase } from '../lib/supabase';
 
 interface LayoutProps {
   user: User | null;
@@ -64,31 +65,71 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
   const [locationName, setLocationName] = useState('Coimbatore');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [menus, setMenus] = useState<any[]>([]);
 
   const navigate = useNavigate();
   const profileRef = useRef<HTMLDivElement>(null);
   const createRef = useRef<HTMLDivElement>(null);
   const exploreRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-      if (createRef.current && !createRef.current.contains(event.target as Node)) {
-        setIsCreateOpen(false);
-      }
-      if (exploreRef.current && !exploreRef.current.contains(event.target as Node)) {
-        setIsExploreOpen(false);
-      }
+    const fetchMenus = async () => {
+      const { data } = await supabase.from('menus').select('*').order('order_index', { ascending: true });
+      if (data) setMenus(data);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    fetchMenus();
   }, []);
 
+  const getMenuItems = (parentId: string | null) => {
+    return menus.filter(m => m.parent_id === parentId).sort((a, b) => a.order_index - b.order_index);
+  };
+
+  const renderNavItems = (parentId: string | null) => {
+    const items = getMenuItems(parentId);
+    return items.map((item) => {
+      const children = getMenuItems(item.id);
+      const hasChildren = children.length > 0;
+
+      if (hasChildren) {
+        return (
+          <div key={item.id} className="relative group h-12 flex items-center">
+            <Link to={item.url} target={item.target} className="flex items-center gap-1 text-[#484848] hover:text-[#ff5862] font-semibold transition-colors">
+              {item.label} <ChevronDown size={14} className="group-hover:rotate-180 transition-transform duration-300" />
+            </Link>
+            <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50">
+              <div className="bg-white rounded-xl shadow-xl border border-black/5 p-2 min-w-[200px]">
+                {children.map(child => (
+                  <Link
+                    key={child.id}
+                    to={child.url}
+                    target={child.target}
+                    className="block px-4 py-2.5 rounded-lg text-sm font-medium text-[#484848] hover:bg-[#f9fafb] hover:text-[#ff5862] transition-colors"
+                  >
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <Link
+          key={item.id}
+          to={item.url}
+          target={item.target}
+          className="text-[#767676] hover:text-[#484848] h-12 flex items-center transition-colors font-semibold"
+        >
+          {item.label}
+        </Link>
+      );
+    });
+  };
+
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('demo_user');
     setUser(null);
     setIsProfileOpen(false);
     navigate('/');
@@ -280,10 +321,14 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
       {/* Secondary Nav Bar */}
       <div className="bg-white border-b border-black/5 h-12 hidden md:flex items-center sticky top-20 z-[90]">
         <div className="max-w-[1200px] w-[90%] mx-auto flex items-center justify-between text-[13px] font-semibold">
-          <nav className="flex items-center gap-8">
-            <Link to="/" className="text-[#ff5862] border-b-2 border-[#ff5862] h-12 flex items-center">Events</Link>
-            <Link to="/rsvp" className="text-[#767676] hover:text-[#484848] h-12 flex items-center transition-colors">RSVP</Link>
-            <span className="text-[#767676] flex items-center gap-1.5 cursor-not-allowed opacity-60">Movies <Lock size={12} /></span>
+          <nav className="flex items-center gap-8 text-[13px]">
+            {menus.length > 0 ? renderNavItems(null) : (
+              <>
+                <Link to="/" className="text-[#ff5862] border-b-2 border-[#ff5862] h-12 flex items-center">Events</Link>
+                <Link to="/rsvp" className="text-[#767676] hover:text-[#484848] h-12 flex items-center transition-colors">RSVP</Link>
+                <span className="text-[#767676] flex items-center gap-1.5 cursor-not-allowed opacity-60">Movies <Lock size={12} /></span>
+              </>
+            )}
           </nav>
           <div className="flex items-center gap-8 text-[#767676]">
             <span className="hover:text-[#ff5862] cursor-pointer transition-colors text-[13px]">What's New</span>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { UserRole, User } from '../types';
+import { UserRole, User } from '@/types';
 import {
   Eye,
   EyeOff,
@@ -20,8 +20,8 @@ import {
   Facebook,
   Apple
 } from 'lucide-react';
-import { api } from '../lib/api';
-import { Logo } from '../components/Layout';
+import { api } from '@/lib/api';
+import { Logo } from '@/components/Layout';
 
 
 type AuthStep = 'FORM' | 'OTP_VERIFY';
@@ -85,6 +85,10 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
         role: role,
         walletBalance: 1000
       };
+
+      // Persist demo user for new tabs
+      localStorage.setItem('demo_user', JSON.stringify(user));
+
       onAuth(user);
       navigate(path);
       setLoading(false);
@@ -111,26 +115,31 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
         setIsRegistering(false);
       } else {
         const response = await api.auth.login({ email, password });
-        localStorage.setItem('token', response.access_token);
 
-        // Mock user object for state based on role
-        // In a real app, the backend would return user info or we'd fetch /me
-        const role = email.includes('admin') ? UserRole.ADMIN :
-          email.includes('organizer') ? UserRole.ORGANISER : UserRole.PUBLIC;
+        if (response.session) {
+          localStorage.setItem('token', response.session.access_token);
 
-        const user: User = {
-          id: 'temp-id',
-          name: name || 'User',
-          email: email,
-          role: role,
-          walletBalance: 0
-        };
+          // Fetch full profile info including role
+          const profile = await api.auth.me();
+          if (profile) {
+            onAuth(profile);
 
-        onAuth(user);
-
-        if (role === UserRole.ADMIN) navigate('/admin/dashboard');
-        else if (role === UserRole.ORGANISER) navigate('/organiser/dashboard');
-        else navigate(from || '/');
+            if (profile.role === UserRole.ADMIN) navigate('/admin/dashboard');
+            else if (profile.role === UserRole.ORGANISER) navigate('/organiser/dashboard');
+            else navigate(from || '/');
+          } else {
+            // Fallback if profile doesn't exist yet but auth is valid
+            const fallbackUser: User = {
+              id: response.user.id,
+              email: response.user.email,
+              name: response.user.user_metadata?.full_name || 'User',
+              role: UserRole.PUBLIC,
+              walletBalance: 0
+            };
+            onAuth(fallbackUser);
+            navigate(from || '/');
+          }
+        }
       }
 
     } catch (err: any) {
@@ -214,6 +223,31 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
                 )}
               </p>
             </div>
+
+            {/* Dev Mode Toggle */}
+            <div className="absolute top-8 right-8 flex items-center gap-3">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Developer Mode</span>
+              <button
+                onClick={() => setIsSimulationMode(!isSimulationMode)}
+                className={`w-12 h-6 rounded-full transition-all relative ${isSimulationMode ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-200'}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isSimulationMode ? 'left-7' : 'left-1'}`} />
+              </button>
+            </div>
+
+            {isSimulationMode && (
+              <div className="mb-10 p-6 bg-slate-950 rounded-3xl border border-slate-800 animate-in zoom-in-95 duration-500">
+                <div className="flex items-center gap-2 mb-4">
+                  <ShieldAlert size={14} className="text-amber-400" />
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Simulated Entry Points</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <button onClick={() => handleDemoLogin(UserRole.ADMIN)} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black text-white hover:bg-amber-500 hover:text-slate-950 transition-all uppercase tracking-widest">Super Admin</button>
+                  <button onClick={() => handleDemoLogin(UserRole.ORGANISER)} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black text-white hover:bg-[#FF5862] transition-all uppercase tracking-widest">Organiser</button>
+                  <button onClick={() => handleDemoLogin(UserRole.PUBLIC)} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black text-white hover:bg-slate-800 transition-all uppercase tracking-widest">Public User</button>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-sm flex items-center gap-3 animate-in shake-in">

@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { User } from '../../types.ts';
+import { User } from '../../types';
 import {
   ChevronLeft,
   ArrowRight,
@@ -25,7 +26,9 @@ import {
   CloudUpload,
   Home,
   Plus,
-  Minus
+  Minus,
+  Check,
+  Info
 } from 'lucide-react';
 import { generateEventDescription } from '../../services/geminiService.ts';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
@@ -92,16 +95,19 @@ const MapModal: React.FC<MapModalProps> = ({ onClose, onSelect, initialPos }) =>
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#080c1f] w-full max-w-4xl rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Select Location</h3>
-          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400">
-            <X size={20} />
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#050716]/90 backdrop-blur-2xl p-12 animate-in fade-in duration-500">
+      <div className="bg-slate-900/80 w-full max-w-5xl rounded-[3rem] border border-white/10 overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-3xl animate-in zoom-in-95">
+        <div className="p-10 border-b border-white/5 flex items-center justify-between bg-white/5">
+          <div className="space-y-1">
+            <h3 className="text-[10px] font-black text-[#FFB703] uppercase tracking-[0.5em]">Coordinate Sector</h3>
+            <h4 className="text-3xl font-black text-white italic tracking-tighter uppercase">Geographic Hub Selection</h4>
+          </div>
+          <button onClick={onClose} className="w-14 h-14 rounded-full bg-white/5 hover:bg-[#FF006E] flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/10 shadow-xl">
+            <X size={28} />
           </button>
         </div>
-        <div className="h-[500px] relative">
-          <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
+        <div className="h-[550px] relative">
+          <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%', filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }}>
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -109,16 +115,17 @@ const MapModal: React.FC<MapModalProps> = ({ onClose, onSelect, initialPos }) =>
             <ChangeView center={position} />
             <LocationMarker />
           </MapContainer>
-          <div className="absolute bottom-4 left-4 z-[1001] bg-[#050716] p-3 rounded-xl border border-slate-800 text-[10px] text-slate-400">
-            {loading ? 'Fetching address...' : 'Click on map to set Latitude, Longitude & Address'}
+          <div className="absolute bottom-8 left-8 z-[1001] bg-slate-900/90 backdrop-blur-xl p-6 rounded-2xl border border-white/10 text-[10px] font-black text-white/60 flex items-center gap-4 uppercase tracking-widest shadow-2xl">
+            {loading ? <Loader2 size={16} className="animate-spin text-[#FFB703]" /> : <MapPin size={16} className="text-[#FFB703]" />}
+            {loading ? 'CALIBRATING POSITION...' : 'MAP INFRASTRUCTURE READY // CLICK TO DEPLOY PIN'}
           </div>
         </div>
-        <div className="p-4 border-t border-slate-800 flex justify-end">
+        <div className="p-10 border-t border-white/5 flex justify-end bg-white/5">
           <button
             onClick={onClose}
-            className="bg-amber-500 hover:bg-amber-400 text-slate-900 px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all"
+            className="bg-[#38B000] text-white px-12 py-5 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all shadow-2xl shadow-green-500/20 hover:bg-white hover:text-[#38B000] italic active:scale-95"
           >
-            Confirm Location
+            Confirm Coordinate Sync
           </button>
         </div>
       </div>
@@ -233,394 +240,370 @@ const CreateEventPage: React.FC<CreateEventPageProps> = ({ user, onAdd }) => {
   };
 
   const renderStepType = () => (
-    <div className="flex flex-col min-h-screen bg-[#0b0c14]">
-      <header className="h-20 bg-[#080c1f] border-b border-slate-800/60 px-12 flex items-center justify-between sticky top-0 z-[100]">
-        <div className="flex items-center gap-10">
-          <h1 className="text-xl font-bold text-slate-200">{t('add_event')}</h1>
-          <nav className="flex items-center gap-3 text-[11px] font-medium text-slate-500">
-            <Home size={14} className="hover:text-amber-500 cursor-pointer" onClick={() => navigate('/organiser/dashboard')} />
-            <ChevronRight size={12} className="text-slate-700" />
-            <span className="hover:text-slate-300 cursor-pointer">Event Management</span>
-            <ChevronRight size={12} className="text-slate-700" />
-            <span className="hover:text-slate-300 cursor-pointer">Choose Event Type</span>
-            <ChevronRight size={12} className="text-slate-700" />
-            <span className="text-slate-300">Add Event</span>
-          </nav>
+    <div className="space-y-12 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div>
+          <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase mb-1">
+            DEPLOY NEW NODE
+          </h2>
+          <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+            Select the dimensional architecture for your upcoming event legacy.
+          </p>
         </div>
-        <div className="flex items-center gap-6">
-          <button className="bg-[#1d4ed8] hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all shadow-lg" onClick={() => navigate(-1)}>
-            <ChevronLeft size={16} /> Back
-          </button>
-        </div>
-      </header>
+        <button
+          onClick={() => navigate('/organiser/dashboard')}
+          className="bg-white/5 border border-white/10 text-white/40 px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all italic active:scale-95"
+        >
+          Cancel Sequence
+        </button>
+      </div>
 
-      <main className="flex-1 flex items-center justify-center p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-          <button
-            onClick={() => { setFormData({ ...formData, isVirtual: true }); setCurrentStep('DETAILS'); }}
-            className="bg-[#080c1f] group rounded-2xl p-10 text-center border border-slate-800/60 hover:border-green-500/50 transition-all hover:bg-[#0a0f26] shadow-xl flex flex-col items-center justify-center gap-4"
-          >
-            <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center text-green-500 group-hover:scale-105 transition-transform border border-green-500/20">
-              <CloudUpload size={24} />
-            </div>
-            <h3 className="text-xs font-black text-slate-200 uppercase tracking-[0.2em]">Online Event</h3>
-          </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl">
+        <button
+          onClick={() => { setFormData({ ...formData, isVirtual: true }); setCurrentStep('DETAILS'); }}
+          className="bg-slate-900/40 group rounded-[4rem] p-20 text-center border border-white/5 hover:border-emerald-500/30 transition-all hover:bg-slate-900/60 shadow-2xl flex flex-col items-center justify-center gap-10 backdrop-blur-3xl relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="w-24 h-24 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-500/20 shadow-2xl relative z-10">
+            <CloudUpload size={48} />
+          </div>
+          <div className="space-y-4 relative z-10">
+            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Online Mutation</h3>
+            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">Virtual Coordinate Feed</p>
+          </div>
+          <div className="absolute top-10 right-10">
+            <Zap size={20} className="text-emerald-500/40" />
+          </div>
+        </button>
 
-          <button
-            onClick={() => { setFormData({ ...formData, isVirtual: false }); setCurrentStep('DETAILS'); }}
-            className="bg-[#080c1f] group rounded-2xl p-10 text-center border border-slate-800/60 hover:border-amber-500/50 transition-all hover:bg-[#0a0f26] shadow-xl flex flex-col items-center justify-center gap-4"
-          >
-            <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 group-hover:scale-105 transition-transform border border-amber-500/20">
-              <MapPin size={24} />
-            </div>
-            <h3 className="text-xs font-black text-slate-200 uppercase tracking-[0.2em]">Venue Event</h3>
-          </button>
-        </div>
-      </main>
+        <button
+          onClick={() => { setFormData({ ...formData, isVirtual: false }); setCurrentStep('DETAILS'); }}
+          className="bg-slate-900/40 group rounded-[4rem] p-20 text-center border border-white/5 hover:border-[#FF006E]/30 transition-all hover:bg-slate-900/60 shadow-2xl flex flex-col items-center justify-center gap-10 backdrop-blur-3xl relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF006E]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="w-24 h-24 bg-[#FF006E]/10 rounded-[2rem] flex items-center justify-center text-[#FF006E] group-hover:scale-110 group-hover:bg-[#FF006E] group-hover:text-white transition-all border border-[#FF006E]/20 shadow-2xl relative z-10">
+            <MapPin size={48} />
+          </div>
+          <div className="space-y-4 relative z-10">
+            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Physical Venue</h3>
+            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">Atomic Locale Deployment</p>
+          </div>
+          <div className="absolute top-10 right-10">
+            <Globe size={20} className="text-[#FF006E]/40" />
+          </div>
+        </button>
+      </div>
     </div>
   );
 
   const renderStepDetails = () => (
-    <div className="min-h-screen bg-[#050716] font-inter text-slate-400">
-      <header className="h-20 bg-[#080c1f] border-b border-slate-800/60 px-12 flex items-center justify-between sticky top-0 z-[100] shadow-xl">
-        <div className="flex items-center gap-6">
-          <h1 className="text-xl font-black text-slate-200 uppercase italic">Add Event</h1>
-          <nav className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
-            <Home size={14} className="text-slate-700" />
-            <ChevronRight size={10} />
-            <span>Event Management</span>
-            <ChevronRight size={10} />
-            <span>Choose Event Type</span>
-            <ChevronRight size={10} />
-            <span className="text-amber-500">Add Event</span>
-          </nav>
+    <div className="space-y-12 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setCurrentStep('TYPE')}
+              className="w-12 h-12 bg-white/5 border border-white/10 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:bg-white hover:text-black transition-all active:scale-95"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">
+              Node Parameters<br />
+              <span className="text-[10px] not-italic tracking-[0.4em] text-[#FF006E] font-bold">CONFIGURATION PHASE</span>
+            </h2>
+          </div>
         </div>
-        <button
-          onClick={() => setCurrentStep('TYPE')}
-          className="bg-[#1d4ed8] hover:bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black flex items-center gap-2 transition-all uppercase tracking-widest shadow-lg"
-        >
-          <ChevronLeft size={16} /> Back
-        </button>
-      </header>
+        <div className="flex gap-4">
+          <button className="bg-white/5 border border-white/10 text-white/40 px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all italic flex items-center gap-3">
+            <Save size={16} /> Save as Draft
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSubmitting}
+            className="bg-[#7209B7] text-white px-12 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#7209B7] transition-all shadow-2xl shadow-purple-500/20 italic flex items-center gap-3 active:scale-95 disabled:opacity-50"
+          >
+            {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <>Deploy Pulse <Zap size={18} /></>}
+          </button>
+        </div>
+      </div>
 
-      <main className="p-12 max-w-[1200px] mx-auto space-y-8 pb-32">
-        <div className="bg-[#080c1f] rounded-2xl border border-slate-800/60 shadow-2xl overflow-hidden p-8 space-y-12">
-          {/* Gallery Images Section */}
-          <div className="space-y-4">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Gallery Images **</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {gallery.map((img, i) => (
-                <div key={i} className="relative group aspect-video rounded-xl overflow-hidden border border-slate-800">
-                  <img src={img} className="w-full h-full object-cover" alt="gallery" />
-                  <button
-                    onClick={() => setGallery(prev => prev.filter((_, idx) => idx !== i))}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-              <label className="border-2 border-dashed border-slate-800 rounded-2xl aspect-video bg-[#050716]/50 flex flex-col items-center justify-center group hover:border-amber-500/40 transition-all cursor-pointer">
-                <input type="file" multiple className="hidden" onChange={handleGalleryChange} />
-                <Plus size={20} className="text-slate-600 group-hover:text-amber-500 transition-colors" />
-                <p className="text-[8px] font-bold uppercase mt-2 tracking-widest text-slate-600">Add Image</p>
-              </label>
-            </div>
-            <p className="text-amber-500/60 text-[10px] font-bold uppercase tracking-widest italic">Image Size 1170x570</p>
-          </div>
-
-          {/* Thumbnail Image Section */}
-          <div className="space-y-4">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Thumbnail Image*</label>
-            <div className="flex flex-col gap-6">
-              <div className="w-[320px] h-[230px] bg-[#050716] border border-slate-800 rounded-xl flex flex-col items-center justify-center gap-4 overflow-hidden">
-                {thumbnails ? (
-                  <img src={thumbnails} className="w-full h-full object-cover" alt="thumbnail" />
-                ) : (
-                  <>
-                    <div className="w-16 h-16 bg-slate-800/30 rounded-full flex items-center justify-center text-slate-700">
-                      <LucideImage size={32} />
-                    </div>
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Image Found</p>
-                  </>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="bg-[#1d4ed8] hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest self-start transition-all cursor-pointer">
-                  Choose Image
-                  <input type="file" className="hidden" onChange={handleThumbnailChange} />
-                </label>
-                <p className="text-amber-500/60 text-[10px] font-bold uppercase tracking-widest italic">Image Size : 320x230</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Configuration Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Date Type*</label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-[#050716] border border-slate-800 rounded-xl">
-                <button
-                  onClick={() => setDateType('SINGLE')}
-                  className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${dateType === 'SINGLE' ? 'bg-[#1b2140] text-white' : 'text-slate-600 hover:text-slate-400'}`}
-                >
-                  Single
-                </button>
-                <button
-                  onClick={() => setDateType('MULTIPLE')}
-                  className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${dateType === 'MULTIPLE' ? 'bg-[#1b2140] text-white' : 'text-slate-600 hover:text-slate-400'}`}
-                >
-                  Multiple
-                </button>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Countdown Status*</label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-[#050716] border border-slate-800 rounded-xl">
-                <button
-                  onClick={() => setCountdownStatus('ACTIVE')}
-                  className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${countdownStatus === 'ACTIVE' ? 'bg-[#1b2140] text-white' : 'text-slate-600 hover:text-slate-400'}`}
-                >
-                  Active
-                </button>
-                <button
-                  onClick={() => setCountdownStatus('DEACTIVE')}
-                  className={`py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${countdownStatus === 'DEACTIVE' ? 'bg-[#1b2140] text-white' : 'text-slate-600 hover:text-slate-400'}`}
-                >
-                  Deactive
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Date & Time Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        {/* Main Configuration Content */}
+        <div className="lg:col-span-2 space-y-12">
+          {/* Metadata Block */}
+          <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-16 space-y-12 shadow-2xl">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Start Date*</label>
-              <input type="date" className="w-full bg-[#050716] border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-amber-500/50" />
+              <h3 className="text-[11px] font-black text-[#FF006E] uppercase tracking-[0.5em] italic">Identity & Descriptor</h3>
+              <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest">Core linguistic and categorical node definitions.</p>
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Start Time*</label>
-              <input type="time" className="w-full bg-[#050716] border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-amber-500/50" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">End Date*</label>
-              <input type="date" className="w-full bg-[#050716] border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-amber-500/50" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">End Time*</label>
-              <input type="time" className="w-full bg-[#050716] border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-amber-500/50" />
-            </div>
-          </div>
 
-          {/* Status & Feature Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Status*</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 outline-none focus:border-amber-500/50"
-              >
-                <option>Draft</option>
-                <option>Published</option>
-              </select>
-            </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Is Feature*</label>
-              <select
-                value={formData.isFeature}
-                onChange={(e) => setFormData({ ...formData, isFeature: e.target.value })}
-                className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 outline-none focus:border-amber-500/50"
-              >
-                <option>No</option>
-                <option>Yes</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Translation Block (Dynamic Based on Selected Regional Language) */}
-          <div className="rounded-2xl border border-slate-800/60 overflow-hidden bg-[#050716]/30">
-            <div className="bg-[#6366f1] px-6 py-4 text-[10px] font-black uppercase tracking-[0.25em] text-white flex items-center justify-between">
-              <span>{currentLanguage.name} Language ({currentLanguage.code === 'en' ? 'Default' : 'Regional'})</span>
-              <Globe size={14} />
-            </div>
-            <div className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{t('event_title')}*</label>
-                  <input
-                    type="text"
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-300 outline-none focus:border-amber-500/50"
-                    placeholder="Enter Event Name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{t('category')}*</label>
-                  <select className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 outline-none focus:border-amber-500/50">
-                    <option>Select Category</option>
-                    <option>Concert</option>
-                    <option>Sports</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{t('address')}*</label>
-                  <div className="flex flex-col gap-3">
-                    <input
-                      type="text"
-                      className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-300 outline-none focus:border-amber-500/50"
-                      placeholder="Enter Address"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    />
-                    <button
-                      onClick={() => setShowMap(true)}
-                      className="bg-[#1d4ed8] hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest self-start transition-all"
-                    >
-                      {t('show_map')}
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Latitude</label>
-                  <input
-                    type="text"
-                    readOnly
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 cursor-not-allowed"
-                    value={formData.latitude}
-                    placeholder="Latitude"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Longitude</label>
-                  <input
-                    type="text"
-                    readOnly
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 cursor-not-allowed"
-                    value={formData.longitude}
-                    placeholder="Longitude"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Country*</label>
-                  <select
-                    value={formData.country}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      country: e.target.value,
-                      state: 'Select a State',
-                      district: 'Select a District',
-                      city: 'Select a City'
-                    })}
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 outline-none focus:border-amber-500/50"
-                  >
-                    <option disabled>Select a Country</option>
-                    {getCountries().map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">State*</label>
-                  <select
-                    value={formData.state}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      state: e.target.value,
-                      district: 'Select a District',
-                      city: 'Select a City'
-                    })}
-                    disabled={formData.country === 'Select a Country'}
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 outline-none focus:border-amber-500/50 disabled:opacity-50"
-                  >
-                    <option disabled>Select a State</option>
-                    {getStatesForCountry(formData.country).map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">District*</label>
-                  <select
-                    value={formData.district}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      district: e.target.value,
-                      city: 'Select a City'
-                    })}
-                    disabled={formData.state === 'Select a State'}
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 outline-none focus:border-amber-500/50 disabled:opacity-50"
-                  >
-                    <option disabled>Select a District</option>
-                    {getDistrictsForState(formData.country, formData.state).map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{t('city')}*</label>
-                  <select
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    disabled={formData.district === 'Select a District'}
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-400 outline-none focus:border-amber-500/50 disabled:opacity-50"
-                  >
-                    <option disabled>Select a City</option>
-                    {getCitiesForDistrict(formData.country, formData.state, formData.district).map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{t('zip')}</label>
-                  <input
-                    type="text"
-                    className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3.5 text-xs text-slate-300"
-                    placeholder="Enter Zip/Post Code"
-                    value={formData.zip}
-                    onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Description Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{t('description')}*</label>
-                <div className="bg-[#050716] border border-slate-800 rounded-xl overflow-hidden min-h-[300px]">
-                  <ReactQuill
-                    theme="snow"
-                    value={formData.description}
-                    onChange={handleDescriptionChange}
-                    modules={quillModules}
-                    placeholder="Enter Detailed Event Description..."
-                  />
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Event Title*</label>
+                <input
+                  type="text"
+                  placeholder="Enter Kinetic Event Title"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[14px] font-black text-white italic outline-none focus:border-[#7209B7] transition-all placeholder:text-white/5"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Sector Category*</label>
+                <div className="relative">
+                  <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[13px] font-black text-white italic appearance-none outline-none focus:border-[#7209B7] transition-all cursor-pointer">
+                    <option className="bg-[#050716]">Select Core Category</option>
+                    <option className="bg-[#050716]">Musical Frequency (Concert)</option>
+                    <option className="bg-[#050716]">Kinetic Motion (Sports)</option>
+                    <option className="bg-[#050716]">Intellectual Sync (Conference)</option>
+                  </select>
+                  <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" size={18} />
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Refund Policy*</label>
-                <textarea
-                  className="w-full bg-[#050716] border border-slate-800 rounded-xl px-6 py-3 text-xs text-slate-400 min-h-[100px]"
-                  placeholder="Enter Refund Policy"
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Neural Description*</label>
+                <button
+                  onClick={handleAIDescription}
+                  disabled={loadingAI}
+                  className="flex items-center gap-3 px-6 py-2 bg-gradient-to-r from-[#7209B7] to-[#FF006E] rounded-xl text-[9px] font-black uppercase tracking-widest text-white hover:scale-105 transition-all shadow-xl active:scale-95 disabled:opacity-50 italic"
+                >
+                  {loadingAI ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} AI Generate
+                </button>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden min-h-[400px] quill-dark">
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={handleDescriptionChange}
+                  modules={quillModules}
+                  placeholder="Inject Detailed Node Description..."
                 />
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-8 flex justify-center">
-            <button
-              onClick={handleSave}
-              disabled={isSubmitting}
-              className="bg-[#22c55e] hover:bg-[#16a34a] text-white px-16 py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 flex items-center gap-3 shadow-xl shadow-green-500/10"
-            >
-              {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <>Save <Save size={18} /></>}
-            </button>
+          {/* Temporal & Spatial Block */}
+          <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-16 space-y-12 shadow-2xl">
+            <div className="space-y-2">
+              <h3 className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.5em] italic">Temporal & Spatial Grid</h3>
+              <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest">Chronological sequencing and locale coordinates.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Chronos Type</label>
+                <div className="p-1.5 bg-white/5 border border-white/10 rounded-2xl grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setDateType('SINGLE')}
+                    className={`py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic ${dateType === 'SINGLE' ? 'bg-[#7209B7] text-white shadow-xl' : 'text-white/20 hover:text-white/40'}`}
+                  >
+                    Single Pulse
+                  </button>
+                  <button
+                    onClick={() => setDateType('MULTIPLE')}
+                    className={`py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic ${dateType === 'MULTIPLE' ? 'bg-[#7209B7] text-white shadow-xl' : 'text-white/20 hover:text-white/40'}`}
+                  >
+                    Multi Cycle
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Countdown Heartbeat</label>
+                <div className="p-1.5 bg-white/5 border border-white/10 rounded-2xl grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setCountdownStatus('ACTIVE')}
+                    className={`py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic ${countdownStatus === 'ACTIVE' ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/10' : 'text-white/20 hover:text-white/40'}`}
+                  >
+                    Active
+                  </button>
+                  <button
+                    onClick={() => setCountdownStatus('DEACTIVE')}
+                    className={`py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic ${countdownStatus === 'DEACTIVE' ? 'bg-[#FF006E] text-white shadow-xl shadow-pink-500/10' : 'text-white/20 hover:text-white/40'}`}
+                  >
+                    Muted
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { label: 'Start Cycle', type: 'date' },
+                { label: 'Sync Time', type: 'time' },
+                { label: 'End Cycle', type: 'date' },
+                { label: 'Decay Time', type: 'time' }
+              ].map((item, i) => (
+                <div key={i} className="space-y-3">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] ml-2">{item.label}</label>
+                  <input type={item.type} className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-5 py-4 text-[12px] font-black text-white italic outline-none focus:border-[#7209B7] transition-all color-scheme-dark" />
+                </div>
+              ))}
+            </div>
+
+            {!formData.isVirtual && (
+              <div className="space-y-8 pt-6 border-t border-white/5">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between ml-4">
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Locale Address*</label>
+                    <button
+                      onClick={() => setShowMap(true)}
+                      className="text-[9px] font-black text-[#FFB703] uppercase tracking-widest flex items-center gap-2 hover:underline underline-offset-4 active:scale-95 transition-all italic"
+                    >
+                      <MapPin size={12} /> Sync with Orbital Map
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Enter Atomic Locale Address"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[14px] font-black text-white italic outline-none focus:border-[#7209B7] transition-all placeholder:text-white/5"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Country Node</label>
+                    <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[12px] font-black text-white italic appearance-none outline-none focus:border-[#7209B7] transition-all cursor-pointer">
+                      <option className="bg-[#050716]">Select Geo-Node</option>
+                      {getCountries().map(c => <option key={c.code} value={c.code} className="bg-[#050716]">{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">State/Region</label>
+                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[12px] font-black text-white italic outline-none" placeholder="Region ID" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">City/Coordinate</label>
+                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[12px] font-black text-white italic outline-none" placeholder="Locale ID" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <footer className="py-12 text-[10px] font-black text-slate-700 uppercase tracking-[0.3em] text-center border-t border-slate-800/40">
-          <p>Copyright ©2026. All Rights Reserved.</p>
-        </footer>
-      </main>
+        {/* Sidebar Controls */}
+        <div className="space-y-12">
+          {/* Artifact Upload Block */}
+          <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-12 space-y-12 shadow-2xl">
+            <div className="space-y-2">
+              <h3 className="text-[11px] font-black text-[#FFB703] uppercase tracking-[0.5em] italic">Artifact Imagery</h3>
+              <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest">Visual transmission synchronization hubs.</p>
+            </div>
+
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Core Thumbnail*</label>
+                <div className="relative group aspect-[320/230] rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-all">
+                  {thumbnails ? (
+                    <img src={thumbnails} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Thumbnail" />
+                  ) : (
+                    <>
+                      <LucideImage size={48} className="text-white/10 group-hover:text-[#FFB703]/40 transition-colors" />
+                      <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mt-6">Inject Identity Hub</p>
+                    </>
+                  )}
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleThumbnailChange} />
+                </div>
+                <p className="text-white/10 text-[9px] font-black uppercase tracking-widest text-center italic">Optimized Resolution: 320x230</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between ml-4">
+                  <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Gallery Mesh**</label>
+                  <span className="text-[9px] font-black text-[#FFB703] italic">{gallery.length}/10 Nodes</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {gallery.slice(0, 3).map((img, i) => (
+                    <div key={i} className="aspect-square rounded-2xl bg-white/5 border border-white/10 overflow-hidden relative group">
+                      <img src={img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                      <button onClick={() => setGallery(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 p-1.5 bg-[#FF006E] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="aspect-square rounded-2xl bg-white/5 border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all group">
+                    <Plus size={24} className="text-white/10 group-hover:text-[#FFB703] transition-colors" />
+                    <input type="file" multiple className="hidden" onChange={handleGalleryChange} />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Verification Protocol Block */}
+          <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[3.5rem] border border-white/5 p-12 space-y-8 shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#38B000]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 bg-[#38B000]/10 rounded-2xl flex items-center justify-center text-[#38B000] border border-[#38B000]/20 shadow-2xl">
+                <Settings size={28} />
+              </div>
+              <div>
+                <h4 className="font-black text-white text-xl italic uppercase tracking-tighter">System Pulse</h4>
+                <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">Global Status Registry</p>
+              </div>
+            </div>
+
+            <div className="space-y-6 relative z-10">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-4">Deployment Slot</label>
+                <div className="relative">
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[12px] font-black text-white italic appearance-none outline-none focus:border-emerald-400 transition-all cursor-pointer"
+                  >
+                    <option className="bg-[#050716]">Protocol: Draft</option>
+                    <option className="bg-[#050716]">Protocol: Publish</option>
+                  </select>
+                  <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" size={16} />
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4">
+                <div className="flex items-center justify-between ml-4">
+                  <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Featured Beacon</label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={formData.isFeature === 'Yes'} onChange={(e) => setFormData({ ...formData, isFeature: e.target.checked ? 'Yes' : 'No' })} />
+                    <div className="w-14 h-8 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white/20 after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500/40 peer-checked:after:bg-emerald-400 border border-white/5"></div>
+                  </label>
+                </div>
+                <p className="text-[8px] font-black text-white/10 uppercase tracking-[0.3em] px-4 leading-relaxed">
+                  *Activating the beacon will prioritize this node in the global discovery feed for maximum orbital visibility.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#050716]/60 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/5 space-y-6">
+            <div className="flex items-center gap-4 text-white/20 group">
+              <Info size={16} className="group-hover:text-emerald-400 transition-colors" />
+              <p className="text-[9px] font-black uppercase tracking-widest italic leading-tight">By deploying this node, you agree to the High-Frequency Integrity Standards of the Evento Grid.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
   return (
-    <>
-      {currentStep === 'TYPE' ? renderStepType() : renderStepDetails()}
+    <div className="min-h-screen bg-transparent font-inter relative overflow-hidden">
+      {/* Absolute Background Image Layer */}
+      <div
+        className="fixed inset-0 z-0 bg-cover bg-center"
+        style={{ backgroundImage: `url('file:///home/raja/.gemini/antigravity/brain/6e645366-9b22-4abc-9ec9-a36d5dd0694f/premium_sidebar_bg_1771147469027.png')` }}
+      />
+      <div className="fixed inset-0 z-0 bg-[#050716]/95 backdrop-blur-3xl" />
+
+      <main className="relative z-10 px-20 py-24 pb-48">
+        {currentStep === 'TYPE' ? renderStepType() : renderStepDetails()}
+      </main>
+
       {showMap && (
         <MapModal
           onClose={() => setShowMap(false)}
@@ -633,7 +616,7 @@ const CreateEventPage: React.FC<CreateEventPageProps> = ({ user, onAdd }) => {
           initialPos={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : undefined}
         />
       )}
-    </>
+    </div>
   );
 };
 
