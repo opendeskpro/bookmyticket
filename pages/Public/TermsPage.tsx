@@ -9,15 +9,15 @@ const TermsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white font-inter pb-24">
       <div className="max-w-4xl mx-auto px-6 py-20">
-        
+
         <p className="text-slate-400 italic text-sm mb-4">Last updated on January 02, 2026.</p>
-        
+
         <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-12 tracking-tight">
           Terms and Conditions
         </h1>
 
         <div className="prose prose-slate max-w-none space-y-12 text-slate-600 font-medium leading-relaxed">
-          
+
           <section className="space-y-4">
             <p>
               <a href="https://www.bookmyticket.io" className="text-amber-500 font-bold hover:underline">www.bookmyticket.io</a> (“Web/App”) is an internet based event tech platform owned and operated by Book My Ticket Event Tech Private Limited (The Service Provider/Platform) (CIN) U72900TZ2022PTC038209.
@@ -113,7 +113,7 @@ const TermsPage: React.FC = () => {
               You agree that Book My Ticket shall, in no event, be liable for any consequential, incidental, indirect, special, punitive or other loss or damage whatsoever or for the loss of business profits, business interruptions, computer failure, loss of business information, or other loss arising out of or caused by your use of or inability to use this website, even if Book My Ticket has been advised of the possibility of such damage.
             </p>
             <p>
-              In no event shall TICKET9 be liable with respect to the site or the services (i) for any amount in the aggregate in excess of the fees paid by user therefore; or (ii) for any indirect, incidental, punitive, or consequential damages.
+              In no event shall BOOKMYTICKET be liable with respect to the site or the services (i) for any amount in the aggregate in excess of the fees paid by user therefore; or (ii) for any indirect, incidental, punitive, or consequential damages.
             </p>
           </section>
 

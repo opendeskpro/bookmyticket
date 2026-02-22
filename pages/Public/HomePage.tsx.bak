@@ -1,0 +1,254 @@
+
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  MapPin,
+  Calendar,
+  Search,
+  ChevronRight,
+  Music,
+  Trophy,
+  Mic2,
+  Users,
+  PartyPopper,
+  Tv,
+  Calendar as CalendarIcon,
+  Ticket,
+  Star,
+  Heart,
+  Quote,
+  Mail
+} from 'lucide-react';
+import { Event } from '../../types';
+import { useSiteConfig } from '../../contexts/SiteConfigContext';
+
+interface HomePageProps {
+  events: Event[];
+}
+
+const HomePage: React.FC<HomePageProps> = ({ events }) => {
+  const { config } = useSiteConfig();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Mock Data for Ticket9 Styling
+  const categories = [
+    { name: 'Concert', icon: <Mic2 size={16} /> },
+    { name: 'Sports', icon: <Trophy size={16} /> },
+    { name: 'Musics', icon: <Music size={16} /> },
+    { name: 'Live Shows', icon: <Tv size={16} /> },
+    { name: 'Comedy Show', icon: <PartyPopper size={16} /> },
+  ];
+
+  // Helper to format price
+  const getEventPrice = (event: Event) => {
+    if (!event.tickets || event.tickets.length === 0) return { label: 'Free', isFree: true };
+    const prices = event.tickets.map(t => Number(t.price) || 0);
+    const minPrice = Math.min(...prices);
+    if (minPrice === 0) return { label: 'Free', isFree: true };
+    return { label: `\u20B9 ${minPrice.toLocaleString('en-IN')}`, isFree: false };
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
+
+      {/* Hero Section - Ticket9 Exact Replica */}
+      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1459749411177-043f8119ebc9?q=80&w=2670&auto=format&fit=crop"
+            alt="Concert Crowd"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+
+        <div className="relative z-10 text-center max-w-5xl px-4 space-y-8 mt-10">
+
+          {/* Headlines */}
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
+              Discover Your Next <br /> Unforgettable Experience
+            </h1>
+            <p className="text-gray-200 text-lg md:text-xl max-w-3xl mx-auto font-medium drop-shadow-md">
+              Explore concerts, shows, nightlife, and exclusive experiences happening around you.
+            </p>
+          </div>
+
+          {/* Search Bar */}
+          <div className="bg-white p-2 rounded-full shadow-2xl max-w-3xl mx-auto flex flex-col md:flex-row items-center">
+            <div className="flex-1 px-6 py-3 border-r border-gray-100 w-full md:w-auto relative">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[#ff5862]" size={20} />
+              <input
+                type="text"
+                placeholder="Search for Events, Plays, Sports..."
+                className="w-full outline-none text-gray-700 font-semibold placeholder:text-gray-400 text-sm pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button className="bg-[#ff5862] hover:bg-[#ff404b] text-white px-10 py-3.5 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all w-full md:w-auto m-1">
+              Search
+            </button>
+          </div>
+
+          {/* Categories Pills (Inside Hero) */}
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
+            {categories.map((cat, i) => (
+              <button
+                key={i}
+                className="px-6 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium hover:bg-[#ff5862] hover:border-[#ff5862] transition-all text-sm flex items-center gap-2"
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* Featured Events Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-[#1E293B] mb-2">Featured Events ✨</h2>
+              <p className="text-gray-500">Explore top events and unforgettable experiences</p>
+            </div>
+            <Link to="/events/featured" className="text-[#ff5862] font-semibold hover:underline flex items-center gap-1">
+              View All <ChevronRight size={16} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {events.slice(0, 4).map(event => {
+              const { label, isFree } = getEventPrice(event);
+              return (
+                <Link key={event.id} to={`/event/${event.id}`} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="relative h-60 overflow-hidden">
+                    <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-[#1E293B] shadow-sm">
+                      {event.category || 'Event'}
+                    </div>
+                    <button className="absolute top-4 right-4 w-8 h-8 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white hover:text-[#ff5862] transition-all">
+                      <Heart size={16} />
+                    </button>
+                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                      <div className="bg-[#ff5862] text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                        {label}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#ff5862] mb-3 uppercase tracking-wide">
+                      {new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                    <h3 className="font-bold text-lg text-[#1E293B] mb-2 line-clamp-2 leading-tight group-hover:text-[#ff5862] transition-colors h-12">
+                      {event.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                      <MapPin size={16} className="text-gray-400" />
+                      <span className="truncate">{event.city}</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Exclusive Events Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-[#1E293B] mb-2">Exclusive Events 🌟</h2>
+              <p className="text-gray-500">Be the first to experience exclusive events before anyone else</p>
+            </div>
+            <Link to="/events/exclusive" className="text-[#ff5862] font-semibold hover:underline flex items-center gap-1">
+              View All <ChevronRight size={16} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {events.slice(2, 6).map((event, i) => {
+              const { label, isFree } = getEventPrice(event);
+              return (
+                <Link key={event.id + i} to={`/event/${event.id}`} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="relative h-60 overflow-hidden">
+                    <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute top-0 right-0 bg-[#ff5862] text-white text-xs font-bold px-3 py-1.5 rounded-bl-xl shadow-md z-10">
+                      EXCLUSIVE
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#ff5862] mb-3 uppercase tracking-wide">
+                      {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long' })}
+                    </div>
+                    <h3 className="font-bold text-lg text-[#1E293B] mb-2 line-clamp-2 leading-tight group-hover:text-[#ff5862] transition-colors">
+                      {event.title}
+                    </h3>
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-dashed border-gray-100">
+                      <div className="flex items-center gap-2 text-gray-500 text-sm">
+                        <MapPin size={16} className="text-gray-400" />
+                        <span className="truncate max-w-[100px]">{event.city}</span>
+                      </div>
+                      <span className="font-bold text-[#1E293B]">{label}</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="max-w-[1440px] w-[95%] mx-auto bg-gradient-to-r from-[#ffe4e6] to-[#fff1f2] rounded-[3rem] p-12 md:p-20 relative overflow-hidden">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff5862]/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full -ml-20 -mb-20 blur-3xl"></div>
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+
+            {/* Text Content */}
+            <div className="flex-1 space-y-6 text-center lg:text-left">
+              <div className="w-16 h-16 bg-[#ff5862] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff5862]/30 mx-auto lg:mx-0 rotate-3">
+                <Mail size={32} />
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-[#1E293B] leading-tight">
+                Join Our Newsletter!
+              </h2>
+              <p className="text-gray-600 text-lg max-w-xl mx-auto lg:mx-0">
+                Subscribe to get latest updates on upcoming events, exclusive offers, and early bird tickets directly to your inbox.
+              </p>
+            </div>
+
+            {/* Form */}
+            <div className="flex-1 w-full max-w-lg">
+              <div className="bg-white p-3 rounded-full shadow-xl flex flex-col md:flex-row items-center gap-2 border border-gray-100">
+                <input
+                  type="email"
+                  placeholder="Your Email Address"
+                  className="flex-1 w-full px-6 py-3 outline-none text-gray-700 bg-transparent placeholder:text-gray-400"
+                />
+                <button className="bg-[#ff5862] hover:bg-[#ff404b] text-white px-8 py-3.5 rounded-full font-bold text-lg shadow-md hover:shadow-lg transition-all w-full md:w-auto">
+                  Subscribe
+                </button>
+              </div>
+              <p className="text-gray-400 text-sm text-center mt-4">
+                We respect your privacy. Unsubscribe at any time.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div>
+  );
+};
+
+export default HomePage;

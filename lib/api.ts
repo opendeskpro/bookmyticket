@@ -1,6 +1,5 @@
-
 import { Event, User, Ticket, Organizer } from '../types';
-import { supabase } from './supabase';
+import { supabase, createEvent, createBooking, getUserBookings, getBookedSeats } from './supabase';
 
 export const api = {
     events: {
@@ -28,19 +27,44 @@ export const api = {
                 .single();
 
             if (error) return null;
-            return data;
+
+            return {
+                ...data,
+                banner: data.banner_url || data.banner,
+                date: data.event_date || data.date,
+                time: data.start_time || data.time,
+                tickets: data.ticket_types || []
+            };
         },
+        getSeats: async (id: string) => {
+            return await getBookedSeats(id);
+        },
+        create: async (data: any) => {
+            return await createEvent(data); // Import this from supabase.ts
+        }
     },
     bookings: {
-        create: async (data: any): Promise<any> => {
-            const { data: booking, error } = await supabase
-                .from('bookings')
-                .insert([data])
-                .select()
-                .single();
+        create: async (eventId: string, seats: any[], totalAmount: number, bookingTime?: string) => {
+            // Calculate breakdown
+            const pricePerTicket = seats[0]?.price || 0; // Assuming all same price for simplicity of this calc
+            const quantity = seats.length;
+            const subtotal = pricePerTicket * quantity;
 
-            if (error) throw error;
-            return { success: true, booking };
+            // Fees configuration (should match BookingPage logic or be fetched from backend config)
+            const BOOKING_FEE_PERCENT = 0.05; // 5%
+
+            const platformFee = Math.round(subtotal * BOOKING_FEE_PERCENT);
+            const internetHandlingFee = quantity * 10; // Fixed 10 per ticket
+            const tax = Math.round((platformFee + internetHandlingFee) * 0.18); // 18% GST on fees
+
+            const breakdown = {
+                ticketPrice: subtotal,
+                platformFee,
+                internetHandlingFee,
+                tax
+            };
+
+            return await createBooking(eventId, seats, totalAmount, bookingTime, breakdown);
         },
         list: async (): Promise<Ticket[]> => {
             const { data, error } = await supabase
@@ -97,7 +121,8 @@ export const api = {
                 password: data.password,
                 options: {
                     data: {
-                        full_name: data.name,
+                        full_name: data.full_name,
+                        role: data.role // Pass role to trigger
                     }
                 }
             });
@@ -116,5 +141,78 @@ export const api = {
 
             return profile;
         },
+        logout: async (): Promise<void> => {
+            await supabase.auth.signOut();
+        },
+    },
+    siteConfig: {
+        get: async (key: string) => {
+            const { data, error } = await supabase
+                .from('site_config')
+                .select('config_value')
+                .eq('section_key', key)
+                .single();
+
+            if (error) {
+                console.error(`Error fetching config ${key}:`, error);
+                return null;
+            }
+            return data?.config_value;
+        },
+        update: async (key: string, value: any) => {
+            const { error } = await supabase
+                .from('site_config')
+                .upsert({ section_key: key, config_value: value }, { onConflict: 'section_key' });
+
+            if (error) throw error;
+            return { success: true };
+        },
+        uploadLogo: async (file: File) => {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `logo-${Date.now()}.${fileExt}`;
+            const filePath = `brand-assets/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('public-assets') // Assuming 'public-assets' bucket exists or similar
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('public-assets')
+                .getPublicUrl(filePath);
+
+            return publicUrl;
+        }
+    },
+    withdrawals: {
+        request: async (amount: number, method: string, bankDetails?: any) => {
+            const { data, error } = await supabase.rpc('request_withdrawal', {
+                p_amount: amount,
+                p_method: method,
+                p_bank_details: bankDetails
+            });
+            if (error) throw error;
+            return data;
+        },
+        listPending: async () => {
+            const { data, error } = await supabase
+                .from('withdrawals')
+                .select('*, profiles(full_name, email, organisation_name)') // Adjust based on actual profile schema
+                .eq('status', 'PENDING')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            return data || [];
+        },
+        approve: async (id: string) => {
+            const { data, error } = await supabase.rpc('approve_withdrawal', { p_withdrawal_id: id });
+            if (error) throw error;
+            return data;
+        },
+        reject: async (id: string) => {
+            const { data, error } = await supabase.rpc('reject_withdrawal', { p_withdrawal_id: id });
+            if (error) throw error;
+            return data;
+        }
     }
 };

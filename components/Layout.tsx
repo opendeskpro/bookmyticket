@@ -22,6 +22,7 @@ import {
   Clapperboard,
   PartyPopper,
   CreditCard,
+  Target,
   Menu,
   Settings as SettingsIcon,
   Heart,
@@ -32,102 +33,59 @@ import {
   Clapperboard as ClapperboardIcon,
   ShoppingBag,
   Camera,
-  Layers
+  Layers,
+  ArrowUp,
+  Mail,
+  Phone,
+  Send,
+  Ticket,
+  ArrowRight
 } from 'lucide-react';
 import LocationModal from './LocationModal';
 import SideMenu from './SideMenu';
 import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
+import { useSiteConfig } from '../contexts/SiteConfigContext';
+import MobileBottomNav from './MobileBottomNav';
 
 interface LayoutProps {
   user: User | null;
   setUser: (user: User | null) => void;
+  currentCity: string;
+  setCurrentCity: (city: string) => void;
 }
 
 export const Logo: React.FC<{ className?: string }> = ({ className = "" }) => {
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className="w-9 h-9 rounded-xl bg-[#ff5862] flex items-center justify-center shadow-lg shadow-[#ff5862]/20">
-        <TicketIcon className="text-white w-5 h-5" />
-      </div>
-      <div className="flex flex-col">
-        <h1 className="text-2xl font-bold tracking-tight text-[#484848] leading-none lowercase">
-          ticket<span className="text-[#ff5862]">9</span>
-        </h1>
-      </div>
+    <div className={`flex items-center gap-0.5 ${className}`}>
+      <h1 className="text-2xl lg:text-3xl font-black tracking-tight leading-none lowercase font-sans flex items-center">
+        <span className="dark:text-white text-[#111111]">book</span>
+        <span className="mx-1 px-1.5 py-0.5 bg-[#F84464] text-white rounded-sm relative flex items-center justify-center overflow-hidden">
+          {/* Jagged edges for the ticket effect */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--bg-header)] rounded-full -ml-[3px]"></div>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--bg-header)] rounded-full -mr-[3px]"></div>
+          my
+        </span>
+        <span className="dark:text-white text-[#111111]">ticket</span>
+      </h1>
     </div>
   );
 };
 
-const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
-  const [isExploreOpen, setIsExploreOpen] = useState(false);
+const Layout: React.FC<LayoutProps> = ({ user, setUser, currentCity, setCurrentCity }) => {
+  const { config } = useSiteConfig();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [locationName, setLocationName] = useState('Coimbatore');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [menus, setMenus] = useState<any[]>([]);
-
   const navigate = useNavigate();
   const profileRef = useRef<HTMLDivElement>(null);
-  const createRef = useRef<HTMLDivElement>(null);
-  const exploreRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchMenus = async () => {
-      const { data } = await supabase.from('menus').select('*').order('order_index', { ascending: true });
-      if (data) setMenus(data);
-    };
-    fetchMenus();
-  }, []);
-
-  const getMenuItems = (parentId: string | null) => {
-    return menus.filter(m => m.parent_id === parentId).sort((a, b) => a.order_index - b.order_index);
-  };
-
-  const renderNavItems = (parentId: string | null) => {
-    const items = getMenuItems(parentId);
-    return items.map((item) => {
-      const children = getMenuItems(item.id);
-      const hasChildren = children.length > 0;
-
-      if (hasChildren) {
-        return (
-          <div key={item.id} className="relative group h-12 flex items-center">
-            <Link to={item.url} target={item.target} className="flex items-center gap-1 text-[#484848] hover:text-[#ff5862] font-semibold transition-colors">
-              {item.label} <ChevronDown size={14} className="group-hover:rotate-180 transition-transform duration-300" />
-            </Link>
-            <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50">
-              <div className="bg-white rounded-xl shadow-xl border border-black/5 p-2 min-w-[200px]">
-                {children.map(child => (
-                  <Link
-                    key={child.id}
-                    to={child.url}
-                    target={child.target}
-                    className="block px-4 py-2.5 rounded-lg text-sm font-medium text-[#484848] hover:bg-[#f9fafb] hover:text-[#ff5862] transition-colors"
-                  >
-                    {child.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <Link
-          key={item.id}
-          to={item.url}
-          target={item.target}
-          className="text-[#767676] hover:text-[#484848] h-12 flex items-center transition-colors font-semibold"
-        >
-          {item.label}
-        </Link>
-      );
-    });
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.auth.logout();
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('demo_user');
     setUser(null);
@@ -135,181 +93,143 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
     navigate('/');
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-white text-[#484848]">
-      {/* Header - Ticket9 Exact Style */}
-      <header className="bg-white sticky top-0 z-[100] border-b border-black/5 h-20 flex items-center shadow-sm">
-        <div className="max-w-[1200px] w-[90%] mx-auto flex items-center justify-between gap-6">
-          <div className="flex items-center gap-10">
-            <Link to="/" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
-              <Logo />
-            </Link>
+    <div className="min-h-screen flex flex-col selection:bg-[#F84464] selection:text-white">
 
-            <div className="hidden lg:flex items-center gap-8 border-l border-black/5 pl-8">
-              <div className="relative" ref={exploreRef}>
-                <button
-                  onClick={() => setIsExploreOpen(!isExploreOpen)}
-                  className={`flex items-center gap-2 text-[14px] font-semibold transition-all ${isExploreOpen ? 'text-[#ff5862]' : 'text-[#484848] hover:text-[#ff5862]'}`}
-                >
-                  Explore <ChevronDown size={16} className={`transition-transform duration-300 ${isExploreOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isExploreOpen && (
-                  <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-2xl shadow-2xl border border-black/5 p-2 z-[200] animate-in fade-in slide-in-from-top-2 duration-200">
-                    {[
-                      { icon: <TicketIcon size={18} />, label: 'Events', desc: 'Now Live', color: 'bg-red-50 text-red-500', link: '/' },
-                      { icon: <ShoppingBag size={18} />, label: 'Brands', desc: 'Now Live', color: 'bg-pink-50 text-pink-500', link: '/brands' },
-                      { icon: <Camera size={18} />, label: 'Creators', desc: 'Join the waitlist', color: 'bg-orange-50 text-orange-500', link: '/creators' },
-                      { icon: <Layers size={18} />, label: 'Coupons', desc: 'Latest Offers', color: 'bg-amber-50 text-amber-500', link: '/coupons' },
-                    ].map((item, i) => (
-                      <Link
-                        key={i}
-                        to={item.link}
-                        onClick={() => setIsExploreOpen(false)}
-                        className="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f9fafb] transition-all group"
-                      >
-                        <div className={`w-10 h-10 rounded-full ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                          {item.icon}
-                        </div>
-                        <div>
-                          <p className="font-bold text-[14px] text-[#484848]">{item.label}</p>
-                          <p className="text-[11px] text-[#767676] font-medium">{item.desc}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="relative group">
-                <input
-                  type="text"
-                  placeholder="Search For Any Event"
-                  className="w-80 pl-6 pr-12 py-3 bg-[#f9fafb] border border-black/5 rounded-full text-[14px] font-medium outline-none focus:ring-2 focus:ring-[#ff5862]/10 focus:bg-white transition-all placeholder:text-[#767676]"
-                />
-                <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-[#767676]" size={16} />
-              </div>
+      {/* Top Promotional Banner (PaytmTravel/Ticket9) */}
+      <div className="bg-[#F5F5F5] py-2.5 px-4 border-b border-gray-200">
+        <div className="max-w-[1440px] w-[95%] mx-auto flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-center">
+          <div className="flex items-center gap-2">
+            <TicketIcon size={14} className="text-[#F84464]" />
+            <span className="text-sm font-bold text-[#F84464]">Ticket9</span>
+            <span className="text-sm font-medium text-gray-600">partners with</span>
+            <div className="flex items-center gap-0.5">
+              <span className="text-sm font-black text-[#00B9F1]">Paytm</span>
+              <span className="text-sm font-black text-black">travel</span>
             </div>
           </div>
+          <span className="text-sm font-medium text-gray-600">to bring you special discounts on bus, flight & hotel bookings.</span>
+          <Link to="/offers" className="text-sm font-bold text-[#F84464] hover:underline flex items-center gap-1">
+            Claim your coupon <ArrowRight size={14} />
+          </Link>
+        </div>
+      </div>
 
-          <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-6">
-              <div
-                onClick={() => setIsLocationModalOpen(true)}
-                className="flex items-center gap-2 text-[14px] font-semibold text-[#484848] cursor-pointer hover:text-[#ff5862] transition-colors group"
-              >
-                <MapPin size={18} className="text-[#ff5862] group-hover:scale-110 transition-transform" />
-                {locationName} <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
-              </div>
-              <div className="flex items-center gap-3 text-[#767676] opacity-60">
-                <TicketIcon size={18} />
-                <span className="text-lg font-light text-black/20">/</span>
-                <MapPin size={18} />
-                <ChevronDown size={14} />
-              </div>
+      {/* Header - bookmyticket Style Recreation */}
+      <header className="bg-[var(--bg-header)] sticky top-0 z-[100] shadow-[0_4px_30px_rgba(0,0,0,0.1)] border-b border-gray-100/10 flex flex-col transition-all">
+
+        {/* Main Header Row */}
+        <div className="py-4">
+          <div className="max-w-[1440px] w-[95%] mx-auto flex items-center justify-between gap-8">
+
+            {/* Left Section: Logo */}
+            <div className="flex items-center gap-12 shrink-0">
+              <Link to="/" className="hover:opacity-90 transition-opacity">
+                <Logo />
+              </Link>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="relative" ref={createRef}>
-                <button
-                  onClick={() => setIsCreateOpen(!isCreateOpen)}
-                  className="px-8 py-3 rounded-full bg-gradient-to-r from-[#FF9650] to-[#FB426E] text-white text-[14px] font-bold shadow-lg shadow-[#FB426E]/20 hover:scale-105 active:scale-95 transition-all text-center"
-                >
-                  Create
-                </button>
+            {/* Middle Section: Navigation Menu (Theme-aware colors) */}
+            <nav className="hidden lg:flex items-center gap-10">
+              <Link to="/events/all" className="text-sm font-bold nav-link hover:text-[#F84464] transition-colors flex items-center gap-1">
+                Movies <ChevronDown size={14} />
+              </Link>
+              <Link to="/events/recommended" className="text-sm font-bold nav-link hover:text-[#F84464] transition-colors">Events</Link>
+              <Link to="/become-organizer" className="text-sm font-bold nav-link hover:text-[#F84464] transition-colors">Plays</Link>
+              <Link to="/about" className="text-sm font-bold nav-link hover:text-[#F84464] transition-colors">Sports</Link>
+            </nav>
 
-                {isCreateOpen && (
-                  <div className="absolute top-full right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl border border-black/5 py-3 px-2 z-[200]">
-                    <Link
-                      to="/become-organizer"
-                      onClick={() => setIsCreateOpen(false)}
-                      className="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f9fafb] transition-all group"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-[#FF9650]/10 flex items-center justify-center text-[#FF9650] group-hover:scale-110 transition-transform">
-                        <PartyPopper size={20} />
-                      </div>
-                      <span className="font-bold text-[15px] text-[#484848]">Events</span>
-                    </Link>
-
-                    <Link
-                      to="/rsvp"
-                      onClick={() => setIsCreateOpen(false)}
-                      className="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f9fafb] transition-all group"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-yellow-400/10 flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
-                        <CreditCard size={20} />
-                      </div>
-                      <span className="font-bold text-[15px] text-[#484848]">RSVP</span>
-                    </Link>
-
-                    <div
-                      className="flex items-center justify-between p-4 rounded-xl opacity-40 cursor-not-allowed group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-[#767676]/10 flex items-center justify-center text-[#767676]">
-                          <Clapperboard size={20} />
-                        </div>
-                        <span className="font-bold text-[15px] text-[#484848]">Movies</span>
-                      </div>
-                      <Lock size={14} className="text-[#767676]" />
-                    </div>
-                  </div>
-                )}
+            {/* Right Section: Actions */}
+            <div className="flex items-center gap-6">
+              {/* Phone Icon (Call CTA) */}
+              <div className="hidden md:flex items-center gap-2 nav-link font-bold text-sm cursor-pointer hover:text-[#FFC107] transition-colors">
+                <span className="hidden xl:inline">1800 209 1444</span>
               </div>
 
+              {/* Location Display */}
+              <div
+                onClick={() => setIsLocationModalOpen(true)}
+                className="hidden md:flex items-center gap-1.5 nav-link font-bold text-sm cursor-pointer hover:text-[#F84464] transition-colors"
+              >
+                <MapPin size={16} className="text-[#F84464]" />
+                <span>{currentCity}</span>
+                <ChevronDown size={14} />
+              </div>
 
+              {/* meeting now Button (renamed from Live Location) */}
+              <button
+                onClick={() => navigate('/meeting-now')}
+                className="bg-[#F84464] text-white px-6 py-2.5 rounded-md font-black text-xs uppercase tracking-widest hover:bg-[#D93654] hover:scale-105 transition-all shadow-[0_0_20px_rgba(248,68,100,0.3)] flex items-center gap-2"
+              >
+                <Target size={14} />
+                meeting now
+              </button>
+
+              {/* Auth / Profile */}
               {!user ? (
-                <Link
-                  to="/auth"
-                  className="px-7 py-3 rounded-full border border-black/10 text-[#484848] text-[14px] font-bold hover:bg-[#f9fafb] transition-all active:scale-95"
-                >
-                  Login
+                <Link to="/auth" className="hidden md:block nav-link font-bold text-sm hover:text-[#FFC107] transition-colors">
+                  Login / Signup
                 </Link>
               ) : (
                 <div className="relative" ref={profileRef}>
                   <button
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="w-10 h-10 rounded-full bg-[#ff5862] text-white flex items-center justify-center font-bold shadow-lg shadow-[#ff5862]/20 active:scale-95 transition-all"
+                    className="flex items-center gap-2 p-1 rounded-full border border-white/10 hover:border-[#FFC107] transition-all"
                   >
-                    {user.name.charAt(0).toUpperCase()}
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FFC107] to-[#FFA000] text-black flex items-center justify-center font-black text-xs shadow-sm">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
                   </button>
                   {isProfileOpen && (
-                    <div className="absolute top-full right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl border border-black/5 py-4 px-2 z-[200]">
-                      <div className="flex items-center gap-3 p-4 border-b border-black/5 mb-2">
-                        <div className="w-10 h-10 bg-[#ff5862] text-white rounded-full flex items-center justify-center font-bold">{user.name.charAt(0)}</div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-[14px] truncate">{user.name}</p>
-                          <p className="text-[11px] text-[#767676] font-medium uppercase tracking-widest">{user.role}</p>
-                        </div>
+                    <div className="absolute top-full right-0 mt-3 w-64 bg-[#0B0B0B] rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.8)] border border-white/5 py-2 z-[200] overflow-hidden backdrop-blur-xl">
+                      <div className="px-5 py-4 border-b border-white/5 bg-white/5">
+                        <p className="font-extrabold text-[15px] truncate text-white">{user.name}</p>
+                        <p className="text-[11px] text-[#FFC107] font-bold uppercase tracking-widest mt-0.5">{user.role}</p>
                       </div>
-                      <Link to="/my-tickets" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#f9fafb] text-[13px] font-semibold text-[#767676] hover:text-[#484848] transition-all">
-                        <TicketIcon size={16} /> My Bookings
-                      </Link>
-                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-500 text-[13px] font-semibold transition-all">
-                        <LogOut size={16} /> Log out
-                      </button>
+                      <div className="py-2">
+                        <Link to="/my-tickets" className="flex items-center gap-3 px-5 py-2.5 text-gray-300 hover:bg-white/5 hover:text-[#FFC107] text-[14px] font-bold transition-colors">
+                          <LayoutDashboard size={16} /> Dashboard
+                        </Link>
+                      </div>
+                      <div className="border-t border-white/5 pt-2 pb-1">
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-5 py-3 hover:bg-red-500/10 text-red-500 hover:text-red-400 text-[13px] font-bold transition-colors">
+                          <LogOut size={16} /> Log out
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
+              {/* Search Toggle */}
+              <button className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:border-[#FFC107] hover:text-[#FFC107] transition-all bg-white/5">
+                <Search size={18} />
+              </button>
+
+              {/* Hamburger Menu */}
               <button
                 onClick={() => setIsMobileNavOpen(true)}
-                className="w-10 h-10 flex items-center justify-center text-[#484848] hover:text-[#ff5862] bg-[#f9fafb] rounded-full border border-black/5 transition-all active:scale-95"
+                className="w-10 h-10 flex items-center justify-center text-white hover:text-[#FFC107] transition-colors"
               >
-                <Menu size={20} />
+                <Menu size={24} />
               </button>
             </div>
+
           </div>
         </div>
+
       </header>
 
       {/* Modals & Drawers */}
       <LocationModal
         isOpen={isLocationModalOpen}
         onClose={() => setIsLocationModalOpen(false)}
-        onSelect={setLocationName}
-        currentCity={locationName}
+        onSelect={setCurrentCity}
+        currentCity={currentCity}
       />
 
       <SideMenu
@@ -318,80 +238,97 @@ const Layout: React.FC<LayoutProps> = ({ user, setUser }) => {
         user={user}
       />
 
-      {/* Secondary Nav Bar */}
-      <div className="bg-white border-b border-black/5 h-12 hidden md:flex items-center sticky top-20 z-[90]">
-        <div className="max-w-[1200px] w-[90%] mx-auto flex items-center justify-between text-[13px] font-semibold">
-          <nav className="flex items-center gap-8 text-[13px]">
-            {menus.length > 0 ? renderNavItems(null) : (
-              <>
-                <Link to="/" className="text-[#ff5862] border-b-2 border-[#ff5862] h-12 flex items-center">Events</Link>
-                <Link to="/rsvp" className="text-[#767676] hover:text-[#484848] h-12 flex items-center transition-colors">RSVP</Link>
-                <span className="text-[#767676] flex items-center gap-1.5 cursor-not-allowed opacity-60">Movies <Lock size={12} /></span>
-              </>
-            )}
-          </nav>
-          <div className="flex items-center gap-8 text-[#767676]">
-            <span className="hover:text-[#ff5862] cursor-pointer transition-colors text-[13px]">What's New</span>
-            <span className="flex items-center gap-1.5 hover:text-[#ff5862] cursor-pointer transition-colors text-[13px]"><Smartphone size={14} /> Get App</span>
-          </div>
-        </div>
-      </div>
-
-      <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
         <Outlet />
       </main>
 
-      <footer className="bg-white border-t border-black/5 py-24">
-        <div className="max-w-[1200px] w-[90%] mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-16 pb-16 border-b border-black/5">
-            <div className="md:col-span-2 space-y-8">
-              <Logo />
-              <p className="text-[14px] font-medium leading-relaxed max-w-sm text-[#767676]">
-                Ticket9 is India's premier high-end event discovery portal. We bridge the gap between imagination and live experience.
-              </p>
-              <div className="flex gap-4">
-                {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-[#f9fafb] flex items-center justify-center text-[#767676] hover:bg-[#ff5862] hover:text-white transition-all cursor-pointer shadow-sm">
-                    <Icon size={18} />
+      {/* Footer - bookmyticket Style Recreation */}
+      {config.footer.visible && (
+        <footer className="bg-[var(--bg-footer)] text-white pt-20 pb-10 font-sans border-t border-white/5 relative overflow-hidden">
+          <div className="max-w-[1440px] w-[95%] mx-auto relative z-10">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 pb-16 border-b border-white/5">
+
+              {/* Column 1: Logo & Mission */}
+              <div className="space-y-6">
+                <Logo className="mb-4" />
+                <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+                  bookmyticket is your one-stop destination for all things entertainment. From the latest movies to exclusive workshops and live events, we bring the best experiences to your fingertips.
+                </p>
+                <div className="flex gap-4">
+                  <div className="h-12 w-auto bg-white/5 rounded-lg border border-white/10 flex items-center justify-center px-4">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-[#FFC107]">Top Training</span>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              {/* Column 2: Quick Links */}
+              <div className="space-y-6">
+                <h4 className="text-white font-black text-sm uppercase tracking-widest border-l-2 border-[#F84464] pl-3">Quick Links</h4>
+                <ul className="space-y-3">
+                  <li><Link to="/" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">Home</Link></li>
+                  <li><Link to="/events/all" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">All Events</Link></li>
+                  <li><Link to="/about" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">About Us</Link></li>
+                  <li><Link to="/careers" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">Careers</Link></li>
+                </ul>
+              </div>
+
+              {/* Column 3: Help & Support */}
+              <div className="space-y-6">
+                <h4 className="text-white font-black text-sm uppercase tracking-widest border-l-2 border-[#F84464] pl-3">Help & Support</h4>
+                <ul className="space-y-3">
+                  <li><Link to="/faq" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">FAQs</Link></li>
+                  <li><Link to="/sitemap" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">Sitemap</Link></li>
+                  <li><Link to="/terms" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">Privacy Policy</Link></li>
+                  <li><Link to="/support" className="text-gray-400 hover:text-[#F84464] text-sm transition-colors">Customer Care</Link></li>
+                </ul>
+              </div>
+
+              {/* Column 4: Newsletter */}
+              <div className="space-y-6">
+                <h4 className="text-white font-black text-sm uppercase tracking-widest border-l-2 border-[#FFC107] pl-3">Subscribe For Latest News</h4>
+                <p className="text-gray-400 text-sm">Be the first to know about new courses and offers.</p>
+                <form className="relative group max-w-sm" onSubmit={(e) => e.preventDefault()}>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full bg-[#000000] border border-white/10 rounded-md px-4 py-3 text-sm outline-none focus:border-[#FFC107] transition-all"
+                  />
+                  <button type="submit" className="absolute right-1 top-1 bottom-1 bg-[#FFC107] text-black px-4 rounded-md hover:bg-[#E6AD00] transition-colors flex items-center justify-center">
+                    <Send size={18} />
+                  </button>
+                </form>
+              </div>
+
+            </div>
+
+            {/* Sub Footer: Social & Legal */}
+            <div className="pt-10 flex flex-col md:flex-row items-center justify-between gap-8">
+              {/* Social Links */}
+              <div className="flex gap-6 text-gray-500">
+                <Twitter size={18} className="hover:text-white cursor-pointer transition-colors" />
+                <Facebook size={18} className="hover:text-white cursor-pointer transition-colors" />
+                <Instagram size={18} className="hover:text-white cursor-pointer transition-colors" />
+                <Linkedin size={18} className="hover:text-white cursor-pointer transition-colors" />
+              </div>
+
+              {/* Legal / Copyright */}
+              <div className="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                <Link to="/corporate" className="hover:text-[#FFC107] transition-colors">Corporate Website</Link>
+                <Link to="/blog" className="hover:text-[#FFC107] transition-colors">Blog</Link>
+                <Link to="/terms" className="hover:text-[#FFC107] transition-colors">Terms of Use</Link>
+                <span className="text-gray-600">Copyright &copy; 2026 bookmyticket</span>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <h4 className="text-[#484848] font-bold text-[14px] uppercase tracking-wide">Marketplace</h4>
-              <ul className="space-y-4 text-[13px] font-medium text-[#767676]">
-                {['All Events', 'Concerts', 'Comedy Shows', 'Workshops', 'Free Events'].map(l => (
-                  <li key={l}><a href="#" className="hover:text-[#ff5862] transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="space-y-6">
-              <h4 className="text-[#484848] font-bold text-[14px] uppercase tracking-wide">Support</h4>
-              <ul className="space-y-4 text-[13px] font-medium text-[#767676]">
-                {['Help Center', 'Privacy Policy', 'Terms of Use', 'Refund Policy', 'Contact Us'].map(l => (
-                  <li key={l}><a href="#" className="hover:text-[#ff5862] transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="space-y-6">
-              <h4 className="text-[#484848] font-bold text-[14px] uppercase tracking-wide">Get App</h4>
-              <div className="space-y-4">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" className="h-10 cursor-pointer hover:scale-105 transition-transform" alt="Play Store" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" className="h-10 cursor-pointer hover:scale-105 transition-transform" alt="App Store" />
-              </div>
-            </div>
           </div>
 
-          <div className="pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-[12px] font-semibold text-[#767676] uppercase tracking-[0.2em]">
-              © 2026 ticket9. all rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+          {/* Background Decorative Element */}
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#FFC107]/5 rounded-full blur-[150px] pointer-events-none"></div>
+        </footer>
+      )}
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 };

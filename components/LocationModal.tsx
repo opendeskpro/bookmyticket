@@ -44,7 +44,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                         <h2 className="text-2xl font-bold text-[#484848] w-full text-center">Select Your Location to Continue</h2>
                         <button
                             onClick={onClose}
-                            className="absolute right-0 text-[#767676] hover:text-[#ff5862] transition-colors"
+                            className="absolute right-0 text-[#767676] hover:text-[#FF006E] transition-colors"
                         >
                             <X size={24} />
                         </button>
@@ -52,13 +52,13 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
 
                     {/* Search */}
                     <div className="relative group">
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[#767676] group-focus-within:text-[#ff5862] transition-colors" size={20} />
+                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[#767676] group-focus-within:text-[#FF006E] transition-colors" size={20} />
                         <input
                             type="text"
                             placeholder="Search city"
                             value={searchTerm || currentCity}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-16 pr-20 py-5 bg-[#f9fafb] border border-black/5 rounded-2xl outline-none focus:ring-2 focus:ring-[#ff5862]/10 focus:bg-white transition-all text-lg font-medium"
+                            className="w-full pl-16 pr-20 py-5 bg-[#f9fafb] border border-black/5 rounded-2xl outline-none focus:ring-2 focus:ring-[#FF006E]/10 focus:bg-white transition-all text-lg font-medium"
                         />
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-4">
                             {searchTerm && (
@@ -66,7 +66,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                                     <X size={18} />
                                 </button>
                             )}
-                            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-black/5 text-[#ff5862] font-semibold text-sm hover:bg-[#ff5862]/5 transition-colors">
+                            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-black/5 text-[#FF006E] font-semibold text-sm hover:bg-[#FF006E]/5 transition-colors">
                                 <Target size={18} />
                             </button>
                         </div>
@@ -79,8 +79,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                                 key={country.name}
                                 onClick={() => setActiveCountry(country.name)}
                                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all font-semibold text-sm ${activeCountry === country.name
-                                        ? 'bg-[#ff5862]/10 border-[#ff5862] text-[#ff5862]'
-                                        : 'border-black/5 text-[#767676] hover:border-[#ff5862]/30'
+                                        ? 'bg-[#FF006E]/10 border-[#FF006E] text-[#FF006E]'
+                                        : 'border-black/5 text-[#767676] hover:border-[#FF006E]/30'
                                     }`}
                             >
                                 <span>{country.flag}</span>
@@ -103,12 +103,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                                     className="flex flex-col items-center gap-3 group"
                                 >
                                     <div className={`w-full aspect-square rounded-2xl border flex items-center justify-center text-3xl transition-all group-hover:scale-110 shadow-sm ${currentCity === city.name
-                                            ? 'border-[#ff5862] bg-[#ff5862]/5 ring-4 ring-[#ff5862]/10'
-                                            : 'border-black/5 bg-[#f9fafb] group-hover:bg-white group-hover:border-[#ff5862]/30'
+                                            ? 'border-[#FF006E] bg-[#FF006E]/5 ring-4 ring-[#FF006E]/10'
+                                            : 'border-black/5 bg-[#f9fafb] group-hover:bg-white group-hover:border-[#FF006E]/30'
                                         }`}>
                                         {city.icon}
                                     </div>
-                                    <span className={`text-[13px] font-bold text-center transition-colors ${currentCity === city.name ? 'text-[#ff5862]' : 'text-[#767676] group-hover:text-[#484848]'
+                                    <span className={`text-[13px] font-bold text-center transition-colors ${currentCity === city.name ? 'text-[#FF006E]' : 'text-[#767676] group-hover:text-[#484848]'
                                         }`}>{city.name}</span>
                                 </button>
                             ))}
@@ -117,8 +117,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
 
                     {/* Footer */}
                     <div className="pt-4 flex justify-center">
-                        <button className="flex items-center gap-3 px-8 py-3 rounded-2xl bg-[#f9fafb] border border-black/5 text-[#767676] font-bold text-sm hover:bg-white hover:border-[#ff5862]/30 transition-all">
-                            <Target size={18} className="text-[#ff5862]" />
+                        <button className="flex items-center gap-3 px-8 py-3 rounded-2xl bg-[#f9fafb] border border-black/5 text-[#767676] font-bold text-sm hover:bg-white hover:border-[#FF006E]/30 transition-all">
+                            <Target size={18} className="text-[#FF006E]" />
                             Events in other cities
                             <ChevronDown size={18} />
                         </button>

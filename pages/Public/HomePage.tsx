@@ -1,491 +1,698 @@
-import React, { useState, useEffect } from 'react';
 
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   MapPin,
   Calendar,
   Search,
-  CheckCircle2,
   ChevronRight,
   ChevronLeft,
   Music,
   Trophy,
-  Theater,
   Mic2,
   Users,
   PartyPopper,
   Tv,
-  Gamepad2,
-  Star,
-  Ticket,
-  Heart,
-  Sparkles,
-  ArrowRight,
-  Menu,
-  Zap,
+  List,
+  Smile,
+  Layout,
+  Mic,
+  Presentation,
+  FerrisWheel,
+  Activity,
+  Headphones,
   Calendar as CalendarIcon,
+  Ticket,
+  Star,
+  Heart,
+  Quote,
+  Mail,
+  TrendingUp,
+  Globe,
   Clock,
-  LayoutGrid,
-  Map as MapIcon
+  ArrowRight,
+  Clapperboard,
+  Settings as SettingsIcon,
+  ChevronDown,
+  CheckCircle2
 } from 'lucide-react';
 import { Event } from '../../types';
-import EventMap from '../../components/EventMap';
+import { useSiteConfig } from '../../contexts/SiteConfigContext';
+import ScrollVelocity from '../../components/ui/ScrollVelocity';
 
 interface HomePageProps {
   events: Event[];
+  currentCity: string;
+  setCurrentCity: (city: string) => void;
 }
 
-// Fixed: Added default export and component implementation for HomePage
-const CountdownTimer: React.FC<{ targetDate: string }> = ({ targetDate }) => {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity }) => {
+  const { config } = useSiteConfig();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [timeLeft, setTimeLeft] = useState({ days: 2, hours: 14, minutes: 45, seconds: 12 });
+
+  // Mock Data for BookMyTicket Styling
+  const categories = [
+    { name: 'All', icon: <List size={24} />, color: 'bg-[#FF6E4E]' },
+    { name: 'Comedy Show', icon: <Smile size={24} />, color: 'bg-gray-100' },
+    { name: 'Competition', icon: <Trophy size={24} />, color: 'bg-gray-100' },
+    { name: 'Concert', icon: <Mic size={24} />, color: 'bg-gray-100' },
+    { name: 'Conference', icon: <Users size={24} />, color: 'bg-gray-100' },
+    { name: 'Exhibition', icon: <Presentation size={24} />, color: 'bg-gray-100' },
+    { name: 'Entertainment', icon: <FerrisWheel size={24} />, color: 'bg-gray-100' },
+    { name: 'Fun', icon: <Smile size={24} />, color: 'bg-gray-100' },
+    { name: 'Marathon', icon: <Activity size={24} />, color: 'bg-gray-100' },
+    { name: 'Musics', icon: <Headphones size={24} />, color: 'bg-gray-100' },
+  ];
+
+  const organizers = [
+    { name: 'Sunburn Arena', count: '12 Events', color: 'bg-orange-500', logo: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=200&auto=format&fit=crop' },
+    { name: 'Comedy Store', count: '8 Events', color: 'bg-purple-500', logo: 'https://images.unsplash.com/photo-1543584756-8f40a802e14f?q=80&w=200&auto=format&fit=crop' },
+    { name: 'Live Nation', count: '24 Events', color: 'bg-blue-500', logo: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=200&auto=format&fit=crop' },
+    { name: 'Super Star', count: '5 Events', color: 'bg-red-500', logo: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=200&auto=format&fit=crop' },
+    { name: 'Tech Conferences', count: '15 Events', color: 'bg-green-500', logo: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=200&auto=format&fit=crop' },
+    { name: 'Food Fests', count: '3 Events', color: 'bg-yellow-500', logo: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=200&auto=format&fit=crop' },
+  ];
+
+  const cities = [
+    { name: 'Coimbatore', image: 'https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=1000&auto=format&fit=crop', count: '10+ Events' },
+    { name: 'Mumbai', image: 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?q=80&w=1000&auto=format&fit=crop', count: '45+ Events' },
+    { name: 'Delhi', image: 'https://images.unsplash.com/photo-1585464231473-196d4fb52749?q=80&w=1000&auto=format&fit=crop', count: '32+ Events' },
+    { name: 'Bangalore', image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=1000&auto=format&fit=crop', count: '28+ Events' },
+    { name: 'Chennai', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=1000&auto=format&fit=crop', count: '19+ Events' },
+    { name: 'Hyderabad', image: 'https://images.unsplash.com/photo-1626014303757-6366116894c7?q=80&w=1000&auto=format&fit=crop', count: '22+ Events' },
+    { name: 'Kochi', image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1000&auto=format&fit=crop', count: '15+ Events' },
+  ];
+
+  // Fallback image helper
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=800&auto=format&fit=crop';
+    e.currentTarget.onerror = null; // Prevent infinite loop
+  };
+
+  // Helper to format price
+  const getEventPrice = (event: Event) => {
+    if (!event.tickets || event.tickets.length === 0) return { label: 'Free', isFree: true };
+    const prices = event.tickets.map(t => Number(t.price) || 0);
+    const minPrice = Math.min(...prices);
+    if (minPrice === 0) return { label: 'Free', isFree: true };
+    return { label: `\u20B9 ${minPrice.toLocaleString('en-IN')}`, isFree: false };
+  };
+
+  const [activeSlide, setActiveSlide] = useState(0);
+  const heroSlides = [
+    {
+      title: "Experience the Magic of Cinema",
+      subtitle: "Book tickets for the latest Hollywood and Bollywood blockbusters. Experience the big screen like never before.",
+      image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2670&auto=format&fit=crop",
+      cta: "Book Movies"
+    },
+    {
+      title: "Live Music, Unforgettable Nights",
+      subtitle: "Join thousands of fans for the biggest rock, pop, and electronic concerts in your city.",
+      image: "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=2670&auto=format&fit=crop",
+      cta: "Find Concerts"
+    },
+    {
+      title: "Laughter is the Best Medicine",
+      subtitle: "Catch the funniest stand-up comedians and improv shows. Book your seats for a night of pure joy.",
+      image: "https://images.unsplash.com/photo-1514525253361-b83f85dfd75c?q=80&w=2670&auto=format&fit=crop",
+      cta: "Join Shows"
+    }
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const distance = new Date(targetDate).getTime() - new Date().getTime();
-      if (distance < 0) {
-        clearInterval(timer);
-        return;
-      }
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    }, 1000);
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [heroSlides.length]);
 
   return (
-    <div className="flex gap-4">
-      {[
-        { label: 'Days', value: timeLeft.days },
-        { label: 'Hours', value: timeLeft.hours },
-        { label: 'Mins', value: timeLeft.minutes },
-        { label: 'Secs', value: timeLeft.seconds },
-      ].map((unit) => (
-        <div key={unit.label} className="bg-white border-2 border-[#f0f0f0] rounded-2xl px-5 py-4 flex flex-col items-center min-w-[85px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transform hover:scale-105 transition-transform">
-          <span className="text-3xl font-bold text-[#484848] leading-none mb-1">{unit.value.toString().padStart(2, '0')}</span>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#767676]">{unit.label}</span>
+    <div className="min-h-screen pb-20 selection:bg-[#F84464] selection:text-white transition-colors duration-500">
+
+      {/* Hero Section - bookmyticket Slider Recreation */}
+      <section className="relative h-[650px] flex items-center overflow-hidden">
+
+        {/* Slides Container */}
+        <div className="absolute inset-0 z-0">
+          {heroSlides.map((slide, idx) => (
+            <div
+              key={idx}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === activeSlide ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="w-full h-full object-cover scale-105"
+                onError={handleImageError}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#000000] via-[#000000]/40 to-transparent"></div>
+              {/* Background Glows */}
+              <div className="absolute top-1/2 left-0 w-[600px] h-[600px] bg-[#FFCC00]/10 rounded-full blur-[150px] -translate-y-1/2 pointer-events-none"></div>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
-};
 
-const HomePage: React.FC<HomePageProps> = ({ events }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
-
-  const categories = [
-    { name: 'All', icon: <Menu size={20} /> },
-    { name: 'Comedy Show', icon: <Sparkles size={20} /> },
-    { name: 'Competition', icon: <Trophy size={20} /> },
-    { name: 'Concert', icon: <Music size={20} /> },
-    { name: 'Conference', icon: <Users size={20} /> },
-    { name: 'Entertainment', icon: <Tv size={20} /> },
-    { name: 'Marathon', icon: <Zap size={20} /> },
-    { name: 'Musics', icon: <Mic2 size={20} /> },
-    { name: 'Party', icon: <PartyPopper size={20} /> },
-  ];
-
-  const filteredEvents = events.filter(e =>
-    (activeCategory === 'All' || e.category.toLowerCase().includes(activeCategory.toLowerCase())) &&
-    (e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.category.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  return (
-    <div className="bg-white min-h-screen pb-32 text-[#484848]">
-      {/* Hero Section - Ticket9 Exact Style */}
-      <section className="relative h-[700px] overflow-hidden flex flex-col items-center justify-center text-center">
-        {/* Visual Background - YouTube Hero */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <iframe
-            className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2"
-            src="https://www.youtube.com/embed/XeaAT-wTLuM?autoplay=1&mute=1&loop=1&playlist=XeaAT-wTLuM&controls=0&modestbranding=1&showinfo=0&rel=0&iv_load_policy=3&enablejsapi=1"
-            allow="autoplay; encrypted-media"
-            frameBorder="0"
-          ></iframe>
-          {/* Gradients and Overlays for Text Contrast */}
-          <div className="absolute inset-0 bg-[#000000]/50 backdrop-blur-[0.5px]"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/95"></div>
-        </div>
-        <div className="max-w-[1200px] w-[90%] mx-auto relative z-10 flex flex-col items-center">
-          <div className="max-w-5xl space-y-12 flex flex-col items-center">
-            <div className="space-y-6">
-              <h1 className="text-[48px] max-[992px]:text-[36px] max-[768px]:text-[28px] font-extrabold text-white tracking-tighter leading-tight drop-shadow-2xl">
-                Discover Your Next<br />
-                <span className="bg-gradient-to-r from-[#FF9650] to-[#FB426E] bg-clip-text text-transparent">Unforgettable Experience</span>
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-[1440px] w-[95%] mx-auto px-4 mt-20">
+          <div className="max-w-3xl space-y-6">
+            <div className="space-y-4">
+              <div className="inline-block px-4 py-1.5 bg-[#F84464] text-white rounded-sm font-black text-[10px] uppercase tracking-[0.2em] shadow-lg animate-bounce-slow">
+                Experience Live Events 🚀
+              </div>
+              <h1 className="text-4xl md:text-6xl lg:text-[64px] font-black text-white leading-[1.1] tracking-tighter">
+                {heroSlides[activeSlide].title.split(' ').map((word, i) => (
+                  <span key={i} className={i % 2 !== 0 ? 'text-[#F84464]' : ''}>{word} </span>
+                ))}
               </h1>
-              <p className="text-lg md:text-xl text-white/90 font-medium max-w-2xl mx-auto drop-shadow-lg">
-                Explore concerts, shows, nightlife, and exclusive experiences happening around you.
+              <p className="text-gray-100 text-lg md:text-xl font-bold max-w-2xl leading-relaxed drop-shadow-lg opacity-90">
+                {heroSlides[activeSlide].subtitle}
               </p>
             </div>
 
-            <div className="w-full max-w-4xl relative">
-              <div className="flex bg-white rounded-2xl p-2 shadow-2xl overflow-hidden group focus-within:ring-4 focus-within:ring-[#ff5862]/10 transition-all border border-black/5">
-                <div className="flex-1 relative flex items-center">
-                  <Search className="absolute left-8 text-[#767676]" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Search events, concerts, shows..."
-                    className="w-full pl-16 pr-8 py-5 bg-transparent text-[16px] font-medium text-[#484848] outline-none placeholder:text-[#767676]"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+            <div className="flex flex-wrap items-center gap-6 pt-2">
+              <button className="bg-[#F84464] text-white px-10 py-4 rounded-md font-black text-sm uppercase tracking-widest hover:bg-[#D93654] hover:-translate-y-1 transition-all shadow-[0_20px_40px_rgba(248,68,100,0.3)] flex items-center gap-3 group">
+                {heroSlides[activeSlide].cta}
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+              <div className="flex items-center gap-4 border-l border-white/20 pl-6 hidden sm:flex">
+                <div className="flex -space-x-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#000000] bg-gray-800 overflow-hidden">
+                      <img src={`https://i.pravatar.cc/100?u=${i}`} alt="Student" />
+                    </div>
+                  ))}
                 </div>
-                <button className="bg-gradient-to-r from-[#FF9650] to-[#FB426E] text-white px-10 py-5 rounded-xl font-bold text-[16px] flex items-center gap-3 hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-[#ff5862]/20">
-                  <Search size={20} /> Search
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-white">10M+ Users</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Trust Us</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Slider Navigation Dots */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+          {heroSlides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveSlide(idx)}
+              className={`h-1.5 transition-all duration-500 rounded-full ${idx === activeSlide ? 'w-12 bg-[#FFCC00]' : 'w-4 bg-white/20 hover:bg-white/40'}`}
+            />
+          ))}
+        </div>
+
+      </section>
+
+
+
+
+
+      {/* Recently Viewed Events */}
+      <section className="py-12 bg-transparent border-b border-white/5 reveal">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <h2 className="text-3xl font-extrabold dark:text-white text-[#111111] mb-2 flex items-center gap-2">
+                Recently Viewed Events <span className="text-2xl">📌</span>
+              </h2>
+              <p className="dark:text-gray-400 text-gray-600 font-medium">Here's a quick look at events you've shown interest in.</p>
+            </div>
+            <Link to="/events" className="hidden md:flex items-center gap-2 text-sm font-bold text-[#FBB040] hover:text-[#d38f29] transition-colors group">
+              View All <span className="w-8 h-8 rounded-full bg-[#FBB040]/10 flex items-center justify-center group-hover:bg-[#FBB040] group-hover:text-black transition-all"><ChevronRight size={16} /></span>
+            </Link>
+          </div>
+
+          <div className="flex overflow-x-auto pb-12 pt-4 gap-6 snap-x scrollbar-hide -mx-4 px-4">
+            {events.slice(0, 3).map((event, i) => (
+              <Link key={`recent-${event.id}`} to={`/event/${event.id}`} className="min-w-[280px] md:min-w-[320px] snap-center dark:bg-[#151515] bg-white rounded-3xl border dark:border-white/5 border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 group">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-t-3xl">
+                  <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={handleImageError} />
+                  <div className="absolute top-3 right-3">
+                    <button className="w-9 h-9 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-400 hover:text-[#F84464] transition-colors shadow-sm">
+                      <Heart size={18} />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-base dark:text-white text-gray-900 leading-tight line-clamp-1 flex-1">{event.title}</h3>
+                    <CheckCircle2 size={16} className="text-[#3B82F6]" />
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-500 text-[13px] font-medium">
+                    <MapPin size={14} className="text-[#F84464]" />
+                    <span className="truncate">{event.city}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
+                    <div className="flex items-center gap-2 text-gray-500 text-[13px] font-medium">
+                      <CalendarIcon size={14} className="text-[#F84464]" />
+                      <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                    <span className="text-[#F84464] font-bold text-[13px]">Paid</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trending Events */}
+      <section className="py-20 dark:bg-gradient-to-b dark:from-[#0B0B0B] dark:to-[#111111] bg-[#f9f9f9]">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <h2 className="text-4xl font-black dark:text-white text-[#111111] mb-2 flex items-center gap-3">Trending Events <span className="text-orange-500 drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]">🔥</span></h2>
+              <p className="dark:text-gray-400 text-gray-600 text-lg">Events that are catching everyone's eye right now.</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link to="/events?filter=trending" className="hidden md:flex items-center gap-2 text-sm font-bold text-[#FF006E] hover:text-[#FF006E] transition-colors group">
+                View All <span className="w-10 h-10 rounded-full bg-[#FF006E]/10 border border-[#FF006E]/30 flex items-center justify-center group-hover:bg-[#FF006E] group-hover:text-white transition-all group-hover:shadow-[0_0_15px_rgba(255,0,110,0.5)]"><ChevronRight size={18} /></span>
+              </Link>
+              <div className="hidden md:flex gap-3 border-l border-white/10 pl-6">
+                <button className="w-12 h-12 rounded-full bg-[#151515] border border-white/10 text-white flex items-center justify-center hover:bg-[#FF006E] hover:border-[#FF006E] transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,0,110,0.5)]">
+                  <ChevronLeft size={22} />
+                </button>
+                <button className="w-12 h-12 rounded-full bg-[#151515] border border-white/10 text-white flex items-center justify-center hover:bg-[#FF006E] hover:border-[#FF006E] transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,0,110,0.5)]">
+                  <ChevronRight size={22} />
                 </button>
               </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {events.slice(0, 4).map((event, i) => (
+              <Link key={`trending-${i}`} to={`/event/${event.id}`} className="group dark:bg-[#151515] bg-white rounded-3xl border dark:border-white/5 border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300">
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <img src={event.banner} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={event.title} onError={handleImageError} />
+                  <div className="absolute top-3 right-3">
+                    <button className="w-9 h-9 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-400 hover:text-[#F84464] transition-colors shadow-sm">
+                      <Heart size={18} />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-base dark:text-white text-gray-900 leading-tight line-clamp-1 flex-1">{event.title}</h3>
+                    <CheckCircle2 size={16} className="text-[#3B82F6]" />
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-500 text-[13px] font-medium">
+                    <MapPin size={14} className="text-[#F84464]" />
+                    <span className="truncate">{event.city}, Tamil Nadu, India</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
+                    <div className="flex items-center gap-2 text-[#F84464] text-[13px] font-bold">
+                      <CalendarIcon size={14} />
+                      <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                    <span className="text-[#F84464] font-bold text-[13px] opacity-70 border-b border-[#F84464]/20 pb-0.5">Paid</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              <div className="mt-12 flex flex-wrap justify-center gap-4">
-                {['Concert', 'Sports', 'Musics', 'Live Shows', 'Comedy Show'].map(tag => (
-                  <button key={tag} className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[13px] font-semibold hover:bg-[#ff5862] hover:border-[#ff5862] transition-all">
-                    {tag}
-                  </button>
-                ))}
+      {/* Explore Popular Events */}
+      <section className="py-16 dark:bg-[#0B0B0B] bg-transparent">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-black dark:text-white text-[#111111] mb-2 flex items-center gap-3">
+                Explore Popular Events 🥳
+              </h2>
+              <p className="dark:text-gray-400 text-gray-600 text-sm font-medium">Dive into the most popular events and experiences nearby!</p>
+            </div>
+            <div className="flex items-center gap-2 mt-4 md:mt-0">
+              <button className="flex items-center gap-2 px-4 py-2 border border-[#F84464] text-[#F84464] rounded-full text-sm font-bold bg-white hover:bg-[#F84464]/5 transition-all">
+                <CalendarIcon size={16} /> All Events
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-bold hover:bg-gray-200 transition-all">
+                <CalendarIcon size={16} /> This Month
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-bold hover:bg-gray-200 transition-all">
+                <CalendarIcon size={16} /> This Week
+              </button>
+            </div>
+          </div>
+
+          <div className="flex overflow-x-auto pb-8 pt-4 gap-8 scrollbar-hide -mx-4 px-4 justify-start md:justify-center">
+            {categories.map((cat, i) => (
+              <button key={i} className="flex flex-col items-center gap-3 group min-w-[100px]">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${i === 0 ? 'bg-[#FF6E4E] text-white shadow-lg shadow-[#FF6E4E]/40' : 'bg-gray-50 dark:bg-white/5 dark:text-gray-400 text-gray-600 border border-gray-100 dark:border-white/10 group-hover:border-[#FF6E4E] group-hover:text-[#FF6E4E] group-hover:-translate-y-1'}`}>
+                  {cat.icon}
+                </div>
+                <span className={`text-[13px] font-bold transition-colors ${i === 0 ? 'text-black dark:text-white' : 'text-gray-500 group-hover:text-[#FF6E4E]'}`}>
+                  {cat.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Spotlight Section - High Fidelity Refactor */}
+      <section className="py-16 bg-white dark:bg-[#0B0B0B] reveal">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <h2 className="text-3xl font-black dark:text-white text-[#111111] mb-2 flex items-center gap-3">
+                Spotlight 🎯
+              </h2>
+              <p className="dark:text-gray-400 text-gray-600 text-sm font-medium">Handpicked experiences and standout events you won't want to miss!</p>
+            </div>
+          </div>
+
+          <div className="relative group">
+            {/* Split Layout Container */}
+            <div className="flex flex-col lg:flex-row bg-[#FFF8F9] dark:bg-[#1A1112] rounded-[2rem] overflow-hidden border border-[#F84464]/10 shadow-[0_20px_50px_rgba(248,68,100,0.1)]">
+              {/* Image Side (Left) */}
+              <div className="w-full lg:w-3/5 h-[450px] overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1200&auto=format&fit=crop"
+                  alt="Spotlight Event"
+                  className="w-full h-full object-cover"
+                />
               </div>
+
+              {/* Details Side (Right) */}
+              <div className="w-full lg:w-2/5 p-8 lg:p-12 flex flex-col justify-center space-y-6">
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-black dark:text-white text-gray-900 leading-tight mb-2">
+                    Kaber Vasuki - Frangipani Tour 2026 - Coimbatore
+                  </h3>
+                  <div className="flex items-center gap-2 text-[#F84464] text-sm font-bold mb-6">
+                    <Clock size={16} />
+                    <span>Event Starts In</span>
+                  </div>
+
+                  {/* Countdown Style Box */}
+                  <div className="grid grid-cols-4 gap-3 mb-8">
+                    {[
+                      { value: '62', label: 'DAYS' },
+                      { value: '03', label: 'HOURS' },
+                      { value: '05', label: 'MINS' },
+                      { value: '07', label: 'SECS' }
+                    ].map((timer, i) => (
+                      <div key={i} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-3 text-center shadow-sm">
+                        <div className="text-xl md:text-2xl font-bold dark:text-white text-gray-800">{timer.value}</div>
+                        <div className="text-[9px] font-black text-gray-400 tracking-widest">{timer.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 px-5 py-3 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300 w-fit">
+                      <CalendarIcon size={18} className="text-[#F84464]" />
+                      <span>Apr 25, 2026</span>
+                      <span className="mx-2 text-gray-300">|</span>
+                      <Clock size={18} className="text-[#F84464]" />
+                      <span>07:00 PM</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 px-5 py-3 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300 w-fit">
+                      <MapPin size={18} className="text-[#F84464]" />
+                      <span>Medai The Stage, Coimbatore</span>
+                    </div>
+                  </div>
+
+                  <button className="w-full sm:w-fit bg-gradient-to-r from-[#FF6E4E] to-[#F84464] text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-[#F84464]/30 hover:shadow-xl hover:shadow-[#F84464]/50 hover:-translate-y-1 transition-all">
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Arrows */}
+            <div className="absolute top-1/2 -left-6 md:-left-8 -translate-y-1/2">
+              <button className="w-12 h-12 rounded-full bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-white/10 shadow-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-[#F84464] transition-colors">
+                <ChevronLeft size={24} />
+              </button>
+            </div>
+            <div className="absolute top-1/2 -right-6 md:-right-8 -translate-y-1/2">
+              <button className="w-12 h-12 rounded-full bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-white/10 shadow-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-[#F84464] transition-colors">
+                <ChevronRight size={24} />
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="max-w-[1200px] w-[90%] mx-auto space-y-32 mt-32">
-        {/* Featured Events Section - Image 2 Style */}
-        <section className="space-y-12">
-          <div className="flex flex-col items-center space-y-4">
-            <h2 className="text-[32px] md:text-[40px] font-bold text-[#484848] tracking-tight">Featured Events ✨</h2>
-            <p className="text-[#767676] font-medium text-center max-w-lg text-[16px]">
-              Explore top events and unforgettable experiences
-            </p>
+
+
+      {/* Featured Events Section */}
+      <section className="py-16 dark:bg-[#151515] bg-transparent">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-black dark:text-white text-[#111111] mb-2">Featured Events ✨</h2>
+              <p className="dark:text-gray-400 text-gray-600 text-sm">Explore top events and unforgettable experiences</p>
+            </div>
+            <Link to="/events/featured" className="text-[#FBB040] text-sm font-bold hover:underline flex items-center gap-1 drop-shadow-[0_0_5px_rgba(251,176,64,0.5)]">
+              View All <ChevronRight size={18} />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-4 max-[1200px]:grid-cols-3 max-[992px]:grid-cols-2 max-[768px]:grid-cols-1 gap-8">
-            {events.slice(0, 4).map(event => (
-              <Link key={event.id} to={`/event/${event.id}`} className="group card-clean overflow-hidden p-2">
-                <div className="aspect-[16/10] rounded-[2.25rem] overflow-hidden relative mb-6">
-                  <img src={event.banner} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={event.title} />
-                  <button className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-[#767676] hover:text-[#ff5862] border border-black/5 transition-all shadow-sm">
-                    <Heart size={18} />
-                  </button>
-                </div>
-                <div className="px-5 pb-5 space-y-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-[18px] font-bold text-[#484848] group-hover:text-[#ff5862] transition-colors truncate">{event.title}</h3>
-                    <CheckCircle2 size={16} className="text-[#3b82f6] fill-current shrink-0" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-[13px] font-medium text-[#767676]">
-                      <MapPin size={16} className="text-[#ff5862]" /> Coimbatore
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+            {events.slice(0, 4).map(event => {
+              const { label, isFree } = getEventPrice(event);
+              return (
+                <Link key={event.id} to={`/event/${event.id}`} className="group dark:bg-[#0B0B0B] bg-white rounded-[2rem] overflow-hidden border dark:border-white/5 border-gray-200 shadow-xl hover:shadow-[0_15px_40px_rgba(251,176,64,0.1)] transition-all duration-500 hover:-translate-y-3">
+                  <div className="relative aspect-[16/10] overflow-hidden border-b dark:border-white/5 border-gray-100">
+                    <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]" onError={handleImageError} />
+                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black tracking-widest text-[#FBB040] border border-[#FBB040]/30 shadow-[0_0_15px_rgba(251,176,64,0.3)]">
+                      {event.category || 'EVENT'}
                     </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-black/5">
-                      <div className="flex items-center gap-2 text-[13px] font-medium text-[#767676]">
-                        <CalendarIcon size={16} className="text-[#ff5862]" /> {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <button className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#FF006E] hover:text-white transition-all shadow-lg border border-white/20 active:scale-90 hover:shadow-[0_0_15px_rgba(255,0,110,0.8)]">
+                      <Heart size={20} />
+                    </button>
+                    <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
+                      <div className="bg-gradient-to-r from-[#FF006E] to-[#FB426E] text-white text-xs font-black tracking-widest px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(255,0,110,0.5)]">
+                        {label}
                       </div>
-                      <span className="text-[#484848] text-[13px] font-bold">Paid</span>
                     </div>
                   </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-xs font-black text-[#FBB040] mb-3 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(251,176,64,0.4)]">
+                      {new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                    <h3 className="font-extrabold text-xl dark:text-white text-[#111111] mb-3 line-clamp-2 leading-tight group-hover:text-[#FBB040] transition-colors h-14">
+                      {event.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                      <MapPin size={16} className="text-[#FF006E]" />
+                      <span className="truncate">{event.city}</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Exclusive Events Section */}
+      <section className="py-16 dark:bg-[#0B0B0B] bg-transparent">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-black dark:text-white text-[#111111] mb-2">Exclusive Events 🌟</h2>
+              <p className="dark:text-gray-400 text-gray-600 text-sm">Be the first to experience exclusive events before anyone else</p>
+            </div>
+            <Link to="/events/exclusive" className="text-[#FF006E] text-sm font-bold hover:underline flex items-center gap-1 drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]">
+              View All <ChevronRight size={18} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+            {events.slice(2, 6).map((event, i) => {
+              const { label, isFree } = getEventPrice(event);
+              return (
+                <Link key={event.id + i} to={`/event/${event.id}`} className="group dark:bg-[#151515] bg-white rounded-[2rem] overflow-hidden border dark:border-white/5 border-gray-200 shadow-xl hover:shadow-[0_15px_40px_rgba(255,0,110,0.1)] transition-all duration-500 hover:-translate-y-3">
+                  <div className="relative aspect-[16/10] flex-shrink-0 overflow-hidden border-b dark:border-white/5 border-gray-100">
+                    <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]" onError={handleImageError} />
+                    <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF006E] to-[#FB426E] text-white text-xs font-black px-4 py-2 rounded-bl-3xl shadow-[0_0_15px_rgba(255,0,110,0.5)] z-10 tracking-widest pl-6 pb-3">
+                      EXCLUSIVE
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-xs font-black text-[#FBB040] mb-3 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(251,176,64,0.4)]">
+                      {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long' })}
+                    </div>
+                    <h3 className="font-extrabold text-xl dark:text-white text-[#111111] mb-2 line-clamp-2 leading-tight group-hover:text-[#FBB040] transition-colors h-14">
+                      {event.title}
+                    </h3>
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+                      <div className="flex items-center gap-2 dark:text-gray-400 text-gray-600 text-sm font-medium">
+                        <MapPin size={16} className="text-[#FF006E]" />
+                        <span className="truncate max-w-[100px]">{event.city}</span>
+                      </div>
+                      <span className="font-black dark:text-white text-[#111111] text-lg drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">{label}</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Virtual Events Section */}
+      <section className="py-16 dark:bg-gradient-to-b dark:from-[#111111] dark:to-[#0B0B0B] bg-[#f0f4f8]">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-black dark:text-white text-[#111111] mb-2 flex items-center gap-3">Virtual Events <Globe className="text-blue-500" size={28} /></h2>
+              <p className="dark:text-gray-400 text-gray-600 text-sm">Enjoy live experiences from the comfort of your home.</p>
+            </div>
+            <Link to="/events/virtual" className="text-[#3b82f6] text-sm font-bold hover:underline flex items-center gap-1 drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]">
+              View All <ChevronRight size={18} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+            {events.slice(1, 5).map((event, i) => (
+              <Link key={`virtual-${i}`} to={`/event/${event.id}`} className="block group dark:bg-[#151515] bg-white p-5 rounded-[2rem] border dark:border-white/5 border-gray-200 shadow-xl hover:shadow-[0_15px_40px_rgba(59,130,246,0.1)] transition-all duration-500 hover:-translate-y-3">
+                <div className="relative rounded-2xl overflow-hidden mb-5 h-52 border dark:border-white/10 border-gray-100">
+                  <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]" onError={handleImageError} />
+                  <div className="absolute top-3 left-3 bg-blue-500/90 backdrop-blur-md text-white text-xs font-black tracking-widest px-3 py-1.5 rounded bg-gradient-to-r from-blue-600 to-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] border border-blue-400/50">ONLINE</div>
+                </div>
+                <h3 className="font-extrabold dark:text-white text-gray-900 text-lg group-hover:text-blue-400 transition-colors line-clamp-1">{event.title}</h3>
+                <p className="text-sm font-medium dark:text-gray-400 text-gray-500 mt-2 dark:bg-white/5 bg-gray-100 inline-block px-3 py-1 rounded-full">{new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Organizers - Marquees */}
+      <section className="py-20 relative overflow-hidden z-10 border-b border-gray-100 dark:border-white/5">
+        <div className="absolute inset-0 z-0">
+          <img src="https://images.unsplash.com/photo-1620121478247-ec786b9be2fa?auto=format&fit=crop&q=80&w=2500" className="w-full h-full object-cover opacity-40 dark:opacity-20" alt="Background" />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/95 via-purple-50/90 to-orange-50/95 dark:from-black/95 dark:via-[#111]/90 dark:to-[#1a1111]/95 backdrop-blur-[2px]"></div>
+        </div>
+
+        <div className="relative z-10 max-w-[1440px] w-[95%] mx-auto mb-10 text-center">
+          <h2 className="text-4xl font-black dark:text-white text-gray-900 drop-shadow-sm">Featured Organizers 🌟</h2>
+        </div>
+
+        <div className="relative z-10 space-y-8 py-4">
+          <ScrollVelocity velocity={-80} numCopies={5} className="flex gap-6 px-4">
+            {organizers.map((org, i) => (
+              <Link key={`org-1-${i}`} to={`/events?search=${org.name}`} className="flex-shrink-0 group cursor-pointer w-48 h-28 bg-white border border-gray-100 shadow-sm hover:shadow-[0_10px_30px_rgba(255,0,110,0.15)] rounded-[1rem] flex items-center justify-center p-4 transition-all duration-500 hover:-translate-y-2 hover:border-[#FF006E]/30">
+                <img src={org.logo} alt={org.name} className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-500 max-h-[80px]" onError={handleImageError} />
+              </Link>
+            ))}
+          </ScrollVelocity>
+
+          <ScrollVelocity velocity={80} numCopies={5} className="flex gap-6 px-4">
+            {[...organizers].reverse().map((org, i) => (
+              <Link key={`org-2-${i}`} to={`/events?search=${org.name}`} className="flex-shrink-0 group cursor-pointer w-48 h-28 bg-white border border-gray-100 shadow-sm hover:shadow-[0_10px_30px_rgba(255,0,110,0.15)] rounded-[1rem] flex items-center justify-center p-4 transition-all duration-500 hover:-translate-y-2 hover:border-[#FF006E]/30">
+                <img src={org.logo} alt={org.name} className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-500 max-h-[80px]" onError={handleImageError} />
+              </Link>
+            ))}
+          </ScrollVelocity>
+        </div>
+      </section>
+
+      {/* Popular Cities - Marquee Left to Right */}
+      <section className="py-20 bg-[#111111] overflow-hidden">
+        <div className="max-w-[1440px] w-[95%] mx-auto mb-12 text-center">
+          <h2 className="text-4xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">Popular Cities 🏙️</h2>
+        </div>
+        <ScrollVelocity velocity={100} numCopies={5} className="flex gap-8 px-4 py-4">
+          {cities.map((city, i) => (
+            <div
+              key={`city-${i}`}
+              onClick={() => setCurrentCity(city.name)}
+              className="relative w-[280px] h-[180px] rounded-[2rem] overflow-hidden cursor-pointer group flex-shrink-0 shadow-2xl border border-white/10 hover:shadow-[0_15px_40px_rgba(248,68,100,0.3)] transition-all duration-500 hover:-translate-y-2 hover:rotate-1"
+            >
+              <img src={city.image} alt={city.name} className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" onError={handleImageError} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent group-hover:via-black/20 transition-colors flex flex-col items-center justify-end pb-8 text-white">
+                <h3 className="text-2xl font-black drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] group-hover:text-[#FBB040] transition-colors">{city.name}</h3>
+                <p className="text-xs font-bold text-gray-300 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">{city.count}</p>
+              </div>
+            </div>
+          ))}
+        </ScrollVelocity>
+      </section>
+
+      {/* Recommended Events Section */}
+      <section className="py-20 dark:bg-[#0B0B0B] bg-transparent border-t border-gray-100/10">
+        <div className="max-w-[1440px] w-[95%] mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-black dark:text-white text-[#111111] mb-2">Recommended For You 🗓️</h2>
+              <p className="dark:text-gray-400 text-gray-600 font-medium">Handpicked events based on your interests.</p>
+            </div>
+            <Link to="/events/recommended" className="text-[#FF006E] font-bold hover:underline flex items-center gap-1 drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]">
+              View All <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {events.slice(3, 7).map((event, i) => (
+              <Link key={`rec-${i}`} to={`/event/${event.id}`} className="dark:bg-[#151515] bg-white p-4 rounded-[2rem] hover:shadow-[0_15px_30px_rgba(255,0,110,0.1)] transition-all border dark:border-white/5 border-gray-200 group hover:-translate-y-2">
+                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden mb-4 border dark:border-white/10 border-gray-100">
+                  <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={handleImageError} />
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <span className="bg-black/60 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black tracking-widest text-[#FBB040] border border-[#FBB040]/30">{event.category}</span>
+                  </div>
+                </div>
+                <h3 className="font-extrabold dark:text-white text-gray-900 line-clamp-1 mb-2 group-hover:text-[#FBB040] transition-colors">{event.title}</h3>
+                <div className="flex items-center justify-between text-[11px] font-bold dark:text-gray-400 text-gray-500">
+                  <span className="flex items-center gap-1"><CalendarIcon size={12} className="text-[#FF006E]" /> {new Date(event.date).toLocaleDateString()}</span>
+                  <span className="text-[#FF006E] group-hover:text-[#FBB040] transition-colors uppercase tracking-widest">Book Now</span>
                 </div>
               </Link>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Popular Cities Section - Image 2 Style */}
-        <section className="space-y-12">
-          <div className="flex flex-col items-center space-y-4">
-            <h2 className="text-[32px] md:text-[40px] font-bold text-[#484848] tracking-tight flex items-center gap-4">
-              <MapPin size={36} className="text-[#ff5862]" fill="currentColor" fillOpacity={0.1} /> Popular Cities 📍
-            </h2>
-            <p className="text-[#767676] font-medium text-center text-[16px]">
-              Upcoming events in the trending destinations!
-            </p>
-          </div>
+      {/* Newsletter Section */}
+      <section className="py-24 dark:bg-[#0B0B0B] bg-transparent relative overflow-hidden">
+        <div className="max-w-[1440px] w-[95%] mx-auto bg-[#151515] rounded-[3rem] p-12 md:p-20 relative overflow-hidden border border-white/5 shadow-2xl group">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF006E]/10 rounded-full -mr-32 -mt-32 blur-[100px] transition-all group-hover:bg-[#FF006E]/20"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#FBB040]/5 rounded-full -ml-32 -mb-32 blur-[100px] transition-all group-hover:bg-[#FBB040]/10"></div>
 
-          <div className="grid grid-cols-4 max-[1200px]:grid-cols-3 max-[992px]:grid-cols-2 max-[768px]:grid-cols-1 gap-8">
-            {[
-              { name: 'Bengaluru', events: 359, image: 'https://images.unsplash.com/photo-1596760405807-0058864744bc?auto=format&fit=crop&q=80&w=600' },
-              { name: 'Chennai', events: 539, image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=600' },
-              { name: 'Coimbatore', events: 313, image: 'https://images.unsplash.com/photo-1540339832862-43187c938495?auto=format&fit=crop&q=80&w=600' },
-              { name: 'Hyderabad', events: 23, image: 'https://images.unsplash.com/photo-1626339661448-522606554c15?auto=format&fit=crop&q=80&w=600' },
-              { name: 'Mumbai', events: 16, image: 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?auto=format&fit=crop&q=80&w=600' },
-              { name: 'Kochi', events: 2, image: 'https://images.unsplash.com/photo-1593576045768-4478895b624f?auto=format&fit=crop&q=80&w=600' },
-              { name: 'Kolkata', events: 6, image: 'https://images.unsplash.com/photo-1558431382-27e305663a8a?auto=format&fit=crop&q=80&w=600' },
-              { name: 'Delhi', events: 5, image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&q=80&w=600' },
-            ].map((city) => (
-              <div key={city.name} className="group relative aspect-[4/3] rounded-[2rem] overflow-hidden cursor-pointer">
-                <img src={city.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={city.name} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
-                  <div className="text-white space-y-1">
-                    <h3 className="text-2xl font-bold tracking-tight">{city.name}</h3>
-                    <p className="text-xs font-medium text-white/80 uppercase tracking-widest">India</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-white text-[12px] font-bold backdrop-blur-md bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
-                    <CalendarIcon size={14} /> {city.events} events
-                  </div>
-                </div>
-                <div className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 group-hover:bg-[#ff5862] transition-all">
-                  <ChevronRight size={20} />
-                </div>
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+
+            {/* Text Content */}
+            <div className="flex-1 space-y-6 text-center lg:text-left">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#FF006E] to-[#FB426E] rounded-[2rem] flex items-center justify-center text-white shadow-[0_10px_30px_rgba(255,0,110,0.4)] mx-auto lg:mx-0 rotate-6 group-hover:rotate-12 transition-transform duration-500">
+                <Mail size={40} />
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Trending Events Section - Image 4 Style */}
-        <section className="space-y-12">
-          <div className="flex flex-col items-center space-y-4">
-            <h2 className="text-[32px] md:text-[40px] font-bold text-[#484848] tracking-tight">Trending Events 🔥</h2>
-            <p className="text-[#767676] font-medium text-center text-[16px]">Be part of the excitement these events are trending now!</p>
-          </div>
-          <div className="grid grid-cols-4 max-[1200px]:grid-cols-3 max-[992px]:grid-cols-2 max-[768px]:grid-cols-1 gap-8">
-            {events.slice(0, 4).map(event => (
-              <Link key={event.id} to={`/event/${event.id}`} className="group card-clean overflow-hidden p-2">
-                <div className="aspect-[16/10] rounded-[2.25rem] overflow-hidden relative mb-6">
-                  <img src={event.banner} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={event.title} />
-                  <button className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-[#767676] hover:text-[#ff5862] border border-black/5 transition-all">
-                    <Heart size={18} />
-                  </button>
-                </div>
-                <div className="px-5 pb-5 space-y-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-[18px] font-bold text-[#484848] group-hover:text-[#ff5862] transition-colors truncate">{event.title}</h3>
-                    <CheckCircle2 size={16} className="text-[#3b82f6] fill-current shrink-0" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-[13px] font-medium text-[#767676]">
-                      <MapPin size={16} className="text-[#ff5862]" /> Coimbatore, Tamil Nadu, India
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-black/5">
-                      <div className="flex items-center gap-2 text-[13px] font-medium text-[#767676]">
-                        <CalendarIcon size={16} className="text-[#ff5862]" /> {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
-                      <span className="text-[#484848] text-[13px] font-bold">Paid</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* Spotlight Section - Image 4 Style */}
-        <section className="space-y-12">
-          <div className="space-y-4 text-center md:text-left">
-            <h2 className="text-3xl md:text-5xl font-bold text-[#484848] tracking-tight">Spotlight 🎯</h2>
-            <p className="text-[#767676] font-medium text-[16px]">Handpicked experiences and standout events you won't want to miss!</p>
-          </div>
-
-          <div className="bg-white rounded-[3rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.03] flex flex-col md:flex-row p-6 gap-10">
-            <div className="md:w-[65%] rounded-[2.5rem] overflow-hidden relative aspect-[16/9]">
-              <img
-                src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=1200"
-                className="w-full h-full object-cover"
-                alt="Spotlight Event"
-              />
+              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight drop-shadow-md">
+                Never Miss a <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FBB040] to-[#FF006E]">Beat.</span>
+              </h2>
+              <p className="text-gray-400 text-lg max-w-xl mx-auto lg:mx-0 font-medium">
+                Subscribe to our newsletter for exclusive event early-access, member-only discounts, and the best experiences delivered to your inbox.
+              </p>
             </div>
-            <div className="md:w-[35%] flex flex-col justify-center space-y-8 py-6 bg-[#F9FAFB]/50 rounded-[2.5rem] px-8 border border-black/[0.01]">
-              <div className="space-y-6">
-                <h3 className="text-[32px] font-bold text-[#484848] tracking-tight leading-tight">Holi Blast 2026</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-[#ff5862]">
-                    <Clock size={16} /> Event Starts In
-                  </div>
-                  <CountdownTimer targetDate="2026-03-08T09:00:00" />
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="flex-1 bg-[#F7F7F7] rounded-2xl p-4 flex items-center gap-3 border border-black/[0.02]">
-                    <CalendarIcon size={20} className="text-[#ff5862]" />
-                    <span className="text-[13px] font-bold text-[#484848]">Mar 8, 2026</span>
-                  </div>
-                  <div className="flex-1 bg-[#F7F7F7] rounded-2xl p-4 flex items-center gap-3 border border-black/[0.02]">
-                    <Clock size={20} className="text-[#ff5862]" />
-                    <span className="text-[13px] font-bold text-[#484848]">09:00 AM</span>
-                  </div>
-                </div>
-                <div className="bg-[#F7F7F7] rounded-2xl p-4 flex items-center gap-3 border border-black/[0.02]">
-                  <MapPin size={20} className="text-[#ff5862]" />
-                  <span className="text-[13px] font-bold text-[#484848]">G Square City 2.0, Coimbatore</span>
-                </div>
-              </div>
-
-              <button className="w-full py-5 bg-[#ff5862] text-white rounded-full font-bold text-[16px] shadow-lg shadow-[#ff5862]/20 hover:bg-[#ff385c] transition-all hover:scale-[1.02] active:scale-95">
-                Register Now
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Featured Organizers Section - Image 3 Style */}
-        <section className="space-y-12">
-          <div className="flex flex-col items-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold text-[#484848] tracking-tight">Featured Organizers 🌟</h2>
-            <p className="text-[#767676] font-medium text-center text-[16px]">Discover events from our trusted organizers worldwide</p>
-          </div>
-          <div className="grid grid-cols-4 max-[1200px]:grid-cols-3 max-[992px]:grid-cols-2 max-[768px]:grid-cols-1 gap-8">
-            {[
-              { name: 'SHARUL CHANNA', events: 3, icon: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200' },
-              { name: 'LEA360COMMUNITY', events: 1, icon: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=200' },
-              { name: 'Unherd Music Community', events: 3, icon: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200' },
-              { name: 'Medai Bengaluru', events: 6, icon: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=200' },
-            ].map((org) => (
-              <div key={org.name} className="card-clean p-10 flex flex-col items-center text-center space-y-8">
-                <div className="w-24 h-24 rounded-2xl overflow-hidden grayscale hover:grayscale-0 transition-all border border-black/5 p-1 bg-white">
-                  <img src={org.icon} className="w-full h-full object-cover rounded-xl" alt={org.name} />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-[14px] font-bold text-[#484848] uppercase tracking-wide">{org.name}</h3>
-                  <div className="flex items-center justify-center gap-2 text-[#767676] text-[12px] font-medium">
-                    <CalendarIcon size={14} className="text-[#ff5862]" /> {org.events} events
-                  </div>
-                </div>
-                <div className="divider-dashed"></div>
-                <button className="text-[12px] font-bold text-[#767676] hover:text-[#ff5862] transition-colors flex items-center gap-2">
-                  Click to explore events <ChevronRight size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Explore Popular Events Section - Image 5 Style */}
-        <section className="space-y-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 border-b border-black/5 pb-10">
-            <div className="space-y-4">
-              <h2 className="text-[32px] md:text-[40px] font-bold text-[#484848] tracking-tight">Explore Popular Events 🥳</h2>
-              <p className="text-[#767676] font-medium text-[16px]">Dive into the most popular events and experiences nearby!</p>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex bg-[#f9fafb] p-1 rounded-2xl border border-black/5 mr-4">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-6 py-3 rounded-xl flex items-center gap-2 text-[12px] font-bold transition-all ${viewMode === 'grid' ? 'bg-white shadow-md text-[#ff5862]' : 'text-[#767676] hover:text-[#484848]'}`}
-                >
-                  <LayoutGrid size={16} /> Grid
-                </button>
-                <button
-                  onClick={() => setViewMode('map')}
-                  className={`px-6 py-3 rounded-xl flex items-center gap-2 text-[12px] font-bold transition-all ${viewMode === 'map' ? 'bg-white shadow-md text-[#ff5862]' : 'text-[#767676] hover:text-[#484848]'}`}
-                >
-                  <MapIcon size={16} /> Map View
-                </button>
-              </div>
-              <button className="px-8 py-4 rounded-2xl bg-[#fff2f3] border border-[#ff5862]/10 text-[#ff5862] text-[12px] font-bold flex items-center gap-2">
-                <CalendarIcon size={16} /> All Events
-              </button>
-              <button className="px-8 py-4 rounded-2xl bg-[#f9fafb] border border-black/5 text-[#767676] text-[12px] font-bold flex items-center gap-2">
-                <CalendarIcon size={16} /> This Month
-              </button>
-            </div>
-          </div>
-
-          {viewMode === 'grid' ? (
-            <>
-              {/* Category Icons - Exact Image 1 Style */}
-              <div className="flex items-start justify-between overflow-x-auto pb-8 no-scrollbar gap-8">
-                {categories.map(cat => (
-                  <button
-                    key={cat.name}
-                    onClick={() => setActiveCategory(cat.name)}
-                    className="flex flex-col items-center gap-4 group min-w-[80px]"
-                  >
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${activeCategory === cat.name ? 'bg-[#FF5A5F] text-white shadow-xl shadow-[#FF5A5F]/30 scale-110' : 'bg-[#F7F7F7] text-[#484848] border border-black/5 group-hover:bg-white group-hover:shadow-lg'}`}>
-                      {React.cloneElement(cat.icon as React.ReactElement, { size: 24 })}
-                    </div>
-                    <span className={`text-[11px] font-black uppercase tracking-wider text-center transition-colors ${activeCategory === cat.name ? 'text-[#484848]' : 'text-[#767676] group-hover:text-[#484848]'}`}>
-                      {cat.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-4 max-[1200px]:grid-cols-3 max-[992px]:grid-cols-2 max-[768px]:grid-cols-1 gap-10">
-                {filteredEvents.slice(0, 8).map(event => (
-                  <Link key={event.id} to={`/event/${event.id}`} className="group card-clean overflow-hidden p-2 flex flex-col">
-                    <div className="aspect-[16/10] rounded-[2.25rem] overflow-hidden relative mb-6">
-                      <img src={event.banner} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={event.title} />
-                      <button className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-[#767676] hover:text-[#FF5A5F] border border-black/5 transition-all shadow-sm">
-                        <Heart size={18} />
-                      </button>
-                    </div>
-                    <div className="px-5 pb-5 space-y-4">
-                      <h3 className="text-[18px] font-bold text-[#484848] group-hover:text-[#ff5862] transition-colors line-clamp-1">{event.title}</h3>
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-3 text-[13px] font-medium text-[#767676]">
-                          <MapPin size={16} className="text-[#ff5862]" /> {event.city}, India
-                        </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-black/[0.05]">
-                          <div className="flex items-center gap-2 text-[13px] font-medium text-[#767676]">
-                            <CalendarIcon size={16} className="text-[#ff5862]" /> {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </div>
-                          <span className="text-[#484848] text-[13px] font-bold">Paid</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </>
-          ) : (
-            <EventMap events={filteredEvents} />
-          )}
-        </section>
-
-        {/* Newsletter Section - Clean Light Style */}
-        <section className="relative bg-[#F7F7F7] rounded-[3.5rem] p-16 border border-black/5 overflow-hidden mt-60">
-          <div className="flex flex-col lg:flex-row gap-20 items-center justify-between">
-            <div className="flex-1 space-y-12">
-              <div className="space-y-6">
-                <h2 className="text-6xl font-black uppercase tracking-tighter leading-none text-[#484848]">
-                  JOIN OUR<br />
-                  <span className="text-[#FF5A5F] italic">NEWSLETTER! 📬</span>
-                </h2>
-                <p className="text-[#767676] font-bold max-w-lg leading-relaxed text-sm">
-                  We get it — spam is no one's friend! That's why our newsletter is different. Pure value, zero clutter.
-                </p>
-              </div>
-              <div className="space-y-6">
-                {[
-                  { id: '01', text: 'Access to upcoming events, webinars, and more. 😍', color: 'bg-[#FF5A5F]' },
-                  { id: '02', text: 'Exclusive offers and coupons just for our subscribers. 🌟', color: 'bg-[#00A699]' },
-                ].map((item) => (
-                  <div key={item.id} className="flex items-center gap-6 group">
-                    <span className={`${item.color} w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-black text-white shadow-lg group-hover:scale-110 transition-transform`}>{item.id}</span>
-                    <p className="text-[#767676] font-black uppercase tracking-widest text-[11px]">{item.text}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="relative max-w-md group">
+            {/* Form */}
+            <div className="flex-1 w-full max-w-lg">
+              <div className="bg-black/40 backdrop-blur-xl p-2.5 rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-2 border border-white/10 focus-within:border-[#FF006E]/50 focus-within:shadow-[0_0_25px_rgba(255,0,110,0.2)] transition-all duration-500">
                 <input
                   type="email"
-                  placeholder="ENTER YOUR EMAIL..."
-                  className="w-full px-10 py-6 bg-white border border-black/10 rounded-3xl outline-none focus:ring-2 focus:ring-[#FF5A5F]/20 transition-all font-black uppercase tracking-widest text-[12px] placeholder:text-slate-300 text-[#484848]"
+                  placeholder="name@awesome.com"
+                  className="flex-1 w-full px-8 py-4 outline-none text-white bg-transparent placeholder:text-gray-600 font-bold"
                 />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#FF5A5F] rounded-2xl flex items-center justify-center hover:bg-[#FF385C] transition-all shadow-xl shadow-[#FF5A5F]/20">
-                  <ArrowRight size={20} className="text-white" />
+                <button className="bg-gradient-to-r from-[#FF006E] to-[#FB426E] text-white px-10 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-[0_10px_20px_rgba(255,0,110,0.4)] hover:shadow-[0_15px_30px_rgba(255,0,110,0.6)] hover:scale-[1.05] active:scale-95 transition-all w-full md:w-auto">
+                  Subscribe
                 </button>
               </div>
+              <p className="text-gray-500 text-[10px] font-bold text-center mt-6 uppercase tracking-widest opacity-60">
+                No spam, only excellence. Unsubscribe with one click.
+              </p>
             </div>
-            <div className="flex-1 relative w-full lg:w-auto flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[500px] group transition-transform duration-700 hover:scale-105">
-                <img
-                  src="/newsletter_illustration_premium.png"
-                  className="w-full h-auto rounded-[3rem] shadow-2xl relative z-0 scale-95"
-                  alt="Newsletter Illustration"
-                />
-                <div className="absolute top-0 right-0 w-40 h-40 bg-[#FF5A5F]/10 rounded-full blur-[60px] animate-pulse"></div>
-              </div>
-            </div>
+
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
     </div>
   );
 };

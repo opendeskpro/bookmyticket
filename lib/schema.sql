@@ -1,4 +1,4 @@
--- TICKET9 COMPREHENSIVE SCHEMA
+-- BOOKMYTICKET COMPREHENSIVE SCHEMA
 -- Support for Events, Ecommerce, Financials, and CMS
 
 -- 1. Profiles & Roles

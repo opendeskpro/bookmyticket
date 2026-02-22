@@ -32,6 +32,21 @@ export const CATEGORIES = [
 
 export const MOCK_EVENTS = [
   {
+    id: '4',
+    title: 'Digital Marketing Masterclass',
+    description: 'Learn the latest trends in digital marketing from industry experts.',
+    category: 'Workshops',
+    location: 'Bangalore',
+    date: '2026-02-15',
+    time: '10:00',
+    banner: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop',
+    organiserId: 'org4',
+    status: 'APPROVED',
+    isVirtual: true,
+    city: 'Bangalore',
+    tickets: [{ id: 't4', name: 'Early Bird', price: 299, quantity: 100, sold: 80 }]
+  },
+  {
     id: '1',
     title: 'Saree, These Are Just Jokes!',
     description: 'A stand-up comedy special by Sharul Channa exploring the quirks of life.',

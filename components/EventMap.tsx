@@ -44,17 +44,17 @@ const EventMap: React.FC<EventMapProps> = ({ events, center = [11.0168, 76.9558]
                                     <h3 className="font-bold text-[14px] text-[#484848] leading-tight">{event.title}</h3>
                                     <div className="space-y-1.5">
                                         <div className="flex items-center gap-2 text-[11px] font-medium text-[#767676]">
-                                            <Calendar size={14} className="text-[#ff5862]" />
+                                            <Calendar size={14} className="text-[#FF006E]" />
                                             {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </div>
                                         <div className="flex items-center gap-2 text-[11px] font-medium text-[#767676]">
-                                            <MapPin size={14} className="text-[#ff5862]" />
+                                            <MapPin size={14} className="text-[#FF006E]" />
                                             {event.city}
                                         </div>
                                     </div>
                                     <Link
                                         to={`/event/${event.id}`}
-                                        className="block w-full py-2 bg-[#ff5862] text-white text-center rounded-lg text-[12px] font-bold hover:bg-[#ff385c] transition-all mt-2"
+                                        className="block w-full py-2 bg-[#FF006E] text-white text-center rounded-lg text-[12px] font-bold hover:bg-[#ff385c] transition-all mt-2"
                                     >
                                         View Details
                                     </Link>

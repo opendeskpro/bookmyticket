@@ -1,129 +1,148 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { UserRole, AppState, User, TicketStatus, Event } from './types';
-import { MOCK_EVENTS } from './constants';
+import { MOCK_EVENTS } from './constants/mockData';
 import Layout from './components/Layout';
-import OrganiserLayout from './components/OrganiserLayout';
 import { api } from './lib/api';
-
 // Pages
 import HomePage from './pages/Public/HomePage';
 import EventDetailsPage from './pages/Public/EventDetailsPage';
 import BookingPage from './pages/Public/BookingPage';
+import GetAppPage from './pages/Public/GetAppPage';
 import MyTicketsPage from './pages/Public/MyTicketsPage';
 import RSVPPage from './pages/Public/RSVPPage';
 import MoviesPage from './pages/Public/MoviesPage';
 import RefundPolicyPage from './pages/Public/RefundPolicyPage';
 import TermsPage from './pages/Public/TermsPage';
 import OrganizerProfilePage from './pages/Public/OrganizerProfilePage';
+import AllEventsPage from './pages/Public/AllEventsPage';
 import ProfileSettingsPage from './pages/Public/ProfileSettingsPage';
 import AuthPage from './pages/AuthPage';
-import AdminLayout from './components/Admin/AdminLayout';
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import MenuBuilder from './pages/Admin/MenuBuilder';
-import BookingList from './pages/Admin/Bookings/BookingList';
-import OrganiserDashboard from './pages/Organiser/OrganiserDashboard';
-import CreateEventPage from './pages/Organiser/CreateEventPage';
-import KYCPage from './pages/Organiser/KYCPage';
-import BecomeOrganizerPage from './pages/Organiser/BecomeOrganizerPage';
-import { AllEventsPage, VenueEventsPage, OnlineEventsPage } from './pages/Organiser/OrganiserEventsPages';
-import { AllBookingsPage, CompletedBookingsPage, PendingBookingsPage, RejectedBookingsPage, BookingsReportPage } from './pages/Organiser/OrganiserBookingsPages';
-import { WithdrawPage, TransactionsPage, PwaScannerPage, SupportTicketsListPage, SupportTicketsAddPage, OrganiserProfilePage as OrganiserProfileSettingsPage, ChangePasswordPage } from './pages/Organiser/OrganiserFinanceAndToolsPages';
-import InvoicePage from './pages/Admin/Bookings/InvoicePage';
-import BookingReport from './pages/Admin/Bookings/BookingReport';
-import WithdrawMethods from './pages/Admin/Withdraw/WithdrawMethods';
-import ManageWithdrawForm from './pages/Admin/Withdraw/ManageWithdrawForm';
-import WithdrawRequests from './pages/Admin/Withdraw/WithdrawRequests';
-import Transactions from './pages/Admin/Transactions';
-import OrganizerSettings from './pages/Admin/Organizer/OrganizerSettings';
-import RegisteredOrganizers from './pages/Admin/Organizer/RegisteredOrganizers';
-import AddOrganizer from './pages/Admin/Organizer/AddOrganizer';
-import SupportSettings from './pages/Admin/Support/SupportSettings';
-import TicketList from './pages/Admin/Support/TicketList';
-import TicketDetails from './pages/Admin/Support/TicketDetails';
+import { getEvents, supabase } from './lib/supabase';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { SiteConfigProvider } from './contexts/SiteConfigContext';
+import ComingSoonPage from './pages/Public/ComingSoonPage';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode; user: User | null; requireRole?: UserRole | UserRole[] }> = ({ children, user, requireRole }) => {
+import UserDashboard from './pages/User/UserDashboard';
+import BrowseEvents from './pages/User/BrowseEvents';
+import TicketView from './pages/User/TicketView';
+import OrganizerSignup from './pages/Organizer/OrganizerSignup';
+import OrganizerDashboard from './pages/Organizer/OrganizerDashboard';
+import UserEventDetails from './pages/User/UserEventDetails';
+import CreateEvent from './pages/Organizer/CreateEvent';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import KYCVerification from './pages/Organizer/KYCVerification';
+import DashboardPlaceholder from './pages/Shared/DashboardPlaceholder';
+import OrganizerEvents from './pages/Organizer/OrganizerEvents';
+import WebCheckIn from './pages/Organizer/WebCheckIn';
+import OrganizerWallet from './pages/Organizer/OrganizerWallet';
+import OrganizerSettings from './pages/Organizer/OrganizerSettings';
+import ManageUsers from './pages/Admin/ManageUsers';
+import AdminApprovals from './pages/Admin/AdminApprovals';
+import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
+import AdminSiteSettings from './pages/Admin/AdminSiteSettings';
+import AdminEvents from './pages/Admin/AdminEvents';
+import SystemSettings from './pages/Admin/SystemSettings';
+import SEOInformation from './pages/Admin/SEOInformation';
+import EmailTemplates from './pages/Admin/EmailTemplates';
+import EditEmailTemplate from './pages/Admin/EditEmailTemplate';
+import QRScanner from './pages/Admin/QRScanner';
+
+// Helper component to handle global theme switching via URL
+const URLThemeListener: React.FC = () => {
   const location = useLocation();
 
-  if (!user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
+  useEffect(() => {
+    const isAuthPage = location.pathname.includes('/auth');
+    const isRoot = location.pathname === '/';
+    const isOrganizerPage = location.pathname.includes('/organizer');
 
-  if (requireRole) {
-    const roles = Array.isArray(requireRole) ? requireRole : [requireRole];
-    if (!roles.includes(user.role) && user.role !== UserRole.ADMIN) {
-      return <Navigate to="/" replace />;
+    // Remove existing theme classes
+    document.body.classList.remove('theme-dark', 'theme-light');
+
+    // Apply new theme class - BMS Light is now the global default for public pages
+    if (isAuthPage || isRoot) {
+      document.body.classList.add('theme-light');
+    } else {
+      document.body.classList.add('theme-dark');
     }
-  }
 
-  return <>{children}</>;
+    // Smooth scroll to top on route change
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
+  return null;
 };
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
     user: null,
-    events: MOCK_EVENTS,
+    events: [],
     tickets: [],
     transactions: []
   });
-  const [loading, setLoading] = useState(true);
+  const [currentCity, setCurrentCity] = useState('Coimbatore');
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const initializeApp = async () => {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      let currentUser: User | null = null;
-
-      if (token) {
-        try {
-          const user = await api.auth.me();
-          if (user) {
-            currentUser = user;
-            setAppState(prev => ({ ...prev, user }));
-          }
-        } catch (authErr) {
-          console.warn("Auth initialization issue:", authErr);
-          localStorage.removeItem('token');
-        }
-      } else {
-        // Check for persisted demo user
-        const savedDemoUser = localStorage.getItem('demo_user');
-        if (savedDemoUser) {
-          try {
-            const user = JSON.parse(savedDemoUser);
-            setAppState(prev => ({ ...prev, user }));
-          } catch (e) {
-            localStorage.removeItem('demo_user');
-          }
-        }
-      }
-
+    const fetchInitialData = async () => {
       try {
-        const dbEvents = await api.events.list();
-        if (dbEvents && dbEvents.length > 0) {
-          setAppState(prev => ({
-            ...prev,
-            events: [...dbEvents, ...MOCK_EVENTS.filter(me => !dbEvents.some(de => String(de.id) === String(me.id)))]
-          }));
-        }
-      } catch (dbErr) {
-        console.warn("Using mock events fallback:", dbErr);
-      }
+        setLoading(true);
 
-      setLoading(false);
+        // 1. Fetch Events
+        const events = await getEvents();
+
+        // 2. Check Session & Fetch User Profile
+        const { data: { session } } = await supabase.auth.getSession();
+
+        let userProfile = null;
+        if (session?.user) {
+          // Fetch profile including role
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          userProfile = profile;
+        }
+
+        setAppState(prev => ({
+          ...prev,
+          events,
+          user: userProfile
+        }));
+
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    initializeApp();
+    fetchInitialData();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        setUser(profile);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const setUser = (user: User | null) => {
     setAppState(prev => ({ ...prev, user }));
-  };
-
-  const bookTicket = (ticket: any) => {
-    setAppState(prev => ({ ...prev, tickets: [ticket, ...prev.tickets] }));
   };
 
   if (loading) {
@@ -140,93 +159,52 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <HashRouter>
-          <Routes>
-            {/* Public & shared layout */}
-            <Route element={<Layout user={appState.user} setUser={setUser} />}>
-              <Route path="/" element={<HomePage events={appState.events} />} />
-              <Route path="/rsvp" element={<RSVPPage events={appState.events} user={appState.user} />} />
-              <Route path="/settings" element={<ProtectedRoute user={appState.user}><ProfileSettingsPage user={appState.user!} onUpdate={(updated) => setUser({ ...appState.user!, ...updated })} /></ProtectedRoute>} />
-              <Route path="/event/:id" element={<EventDetailsPage events={appState.events} user={appState.user} />} />
-              <Route path="/book/:eventId" element={<ProtectedRoute user={appState.user}><BookingPage events={appState.events} user={appState.user!} onBook={bookTicket} /></ProtectedRoute>} />
-              <Route path="/my-tickets" element={<ProtectedRoute user={appState.user}><MyTicketsPage tickets={appState.tickets} user={appState.user!} /></ProtectedRoute>} />
-              <Route path="/refund-policy" element={<RefundPolicyPage />} />
-              <Route path="/terms-and-conditions" element={<TermsPage />} />
-              <Route path="/movies" element={<MoviesPage />} />
-              <Route path="/organizer/:id" element={<OrganizerProfilePage events={appState.events} />} />
-              <Route path="/become-organizer" element={<BecomeOrganizerPage />} />
-              <Route path="/organiser/kyc" element={<ProtectedRoute user={appState.user}><KYCPage user={appState.user!} /></ProtectedRoute>} />
-            </Route>
+        <SiteConfigProvider>
+          <HashRouter>
+            <URLThemeListener />
+            <Routes>
+              {/* Public Routes with Main Layout */}
+              <Route element={<Layout user={appState.user} setUser={setUser} currentCity={currentCity} setCurrentCity={setCurrentCity} />}>
+                <Route path="/" element={<HomePage events={appState.events} currentCity={currentCity} setCurrentCity={setCurrentCity} />} />
+                <Route path="/events" element={<BrowseEvents />} />
+                <Route path="/get-app" element={<GetAppPage />} />
+                <Route path="/movies" element={<MoviesPage />} />
+                <Route path="/meeting-now" element={<ComingSoonPage />} />
 
-            {/* Admin Routes - Nested under AdminLayout */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute user={appState.user} requireRole={UserRole.ADMIN}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<AdminDashboard events={appState.events} />} />
-              <Route path="menu-builder" element={<MenuBuilder />} />
-              <Route path="bookings" element={<BookingList status="all" />} />
-              <Route path="bookings/completed" element={<BookingList status="completed" />} />
-              <Route path="bookings/pending" element={<BookingList status="pending" />} />
-              <Route path="bookings/rejected" element={<BookingList status="rejected" />} />
-              <Route path="bookings/report" element={<BookingReport />} />
-              <Route path="withdraw/payment-methods" element={<WithdrawMethods />} />
-              <Route path="withdraw/requests" element={<WithdrawRequests />} />
-              <Route path="transactions" element={<Transactions />} />
-              <Route path="withdraw/manage-form/:id" element={<ManageWithdrawForm />} />
-              <Route path="organizers" element={<RegisteredOrganizers />} />
-              <Route path="organizers/add" element={<AddOrganizer />} />
-              <Route path="organizers/settings" element={<OrganizerSettings />} />
-              <Route path="support" element={<TicketList filter="all" />} />
-              <Route path="support/all" element={<TicketList filter="all" />} />
-              <Route path="support/pending" element={<TicketList filter="pending" />} />
-              <Route path="support/open" element={<TicketList filter="open" />} />
-              <Route path="support/closed" element={<TicketList filter="closed" />} />
-              <Route path="support/ticket/:id" element={<TicketDetails />} />
-              <Route path="support/settings" element={<SupportSettings />} />
-            </Route>
-            <Route path="/admin/bookings/invoice/:id" element={
-              <ProtectedRoute user={appState.user} requireRole={UserRole.ADMIN}>
-                <InvoicePage />
-              </ProtectedRoute>
-            } />
+                {/* User Portal */}
+                <Route path="/user/dashboard" element={<UserDashboard />} />
+                <Route path="/user/event/:id" element={<UserEventDetails />} />
+                <Route path="/user/ticket/:id" element={<TicketView />} />
+              </Route>
 
-            {/* Organiser portal with its own layout */}
-            <Route
-              path="/organiser"
-              element={
-                <ProtectedRoute user={appState.user} requireRole={UserRole.ORGANISER}>
-                  <OrganiserLayout user={appState.user!} setUser={setUser} />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<OrganiserDashboard user={appState.user!} events={appState.events} />} />
-              <Route path="create" element={<CreateEventPage user={appState.user!} onAdd={() => { }} onVerifyUser={() => { }} />} />
-              <Route path="events/all" element={<AllEventsPage events={appState.events} />} />
-              <Route path="events/venue" element={<VenueEventsPage events={appState.events} />} />
-              <Route path="events/online" element={<OnlineEventsPage events={appState.events} />} />
-              <Route path="bookings/all" element={<AllBookingsPage />} />
-              <Route path="bookings/completed" element={<CompletedBookingsPage />} />
-              <Route path="bookings/pending" element={<PendingBookingsPage />} />
-              <Route path="bookings/rejected" element={<RejectedBookingsPage />} />
-              <Route path="bookings/report" element={<BookingsReportPage />} />
-              <Route path="withdraw" element={<WithdrawPage />} />
-              <Route path="transactions" element={<TransactionsPage />} />
-              <Route path="pwa-scanner" element={<PwaScannerPage />} />
-              <Route path="support" element={<SupportTicketsListPage />} />
-              <Route path="support/all" element={<SupportTicketsListPage />} />
-              <Route path="support/add" element={<SupportTicketsAddPage />} />
-              <Route path="profile" element={<OrganiserProfileSettingsPage />} />
-              <Route path="change-password" element={<ChangePasswordPage />} />
-            </Route>
+              {/* Organizer Portal */}
+              <Route path="/organizer/signup" element={<OrganizerSignup />} />
+              <Route path="/organizer/dashboard" element={<OrganizerDashboard user={appState.user} />} />
+              <Route path="/organizer/create-event" element={<CreateEvent user={appState.user} />} />
+              <Route path="/organizer/events" element={<OrganizerEvents />} />
+              <Route path="/organizer/attendees" element={<WebCheckIn />} />
+              <Route path="/organizer/wallet" element={<OrganizerWallet user={appState.user} />} />
+              <Route path="/organizer/kyc" element={<KYCVerification />} />
+              <Route path="/organizer/settings" element={<OrganizerSettings />} />
 
-            <Route path="/auth" element={<AuthPage onAuth={setUser} />} />
-          </Routes>
-        </HashRouter>
+              {/* Admin Portal */}
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<ManageUsers />} />
+              <Route path="/admin/approvals" element={<AdminApprovals />} />
+              <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
+              <Route path="/admin/events" element={<AdminEvents />} />
+              <Route path="/admin/settings" element={<AdminSiteSettings />} />
+              <Route path="/admin/system-settings" element={<SystemSettings />} />
+              <Route path="/admin/seo-information" element={<SEOInformation />} />
+              <Route path="/admin/email-templates" element={<EmailTemplates />} />
+              <Route path="/admin/email-templates/edit/:id" element={<EditEmailTemplate />} />
+              <Route path="/admin/qr-scanner" element={<QRScanner />} />
+
+              <Route path="/auth" element={<AuthPage onAuth={setUser} />} />
+              <Route path="/organiser/*" element={<Navigate to="/organizer/dashboard" replace />} />
+            </Routes>
+          </HashRouter>
+        </SiteConfigProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

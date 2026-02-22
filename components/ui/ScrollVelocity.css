@@ -1,0 +1,24 @@
+.parallax {
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.scroller {
+    display: flex;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+}
+
+/* 
+   Removed strict font styles from original snippet 
+   to allow children (Cards) to define their own look.
+*/
+
+.scroller>* {
+    display: flex;
+    flex-shrink: 0;
+    /* Add some spacing between the copies if needed, 
+     but usually margins are on the items themselves. */
+}

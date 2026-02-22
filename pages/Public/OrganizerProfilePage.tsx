@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Event } from '../../types';
-import { 
-  ShieldCheck, 
-  MapPin, 
-  Users, 
-  Calendar, 
-  Globe, 
-  Instagram, 
-  Twitter, 
-  CheckCircle2, 
-  Share2, 
+import {
+  ShieldCheck,
+  MapPin,
+  Users,
+  Calendar,
+  Globe,
+  Instagram,
+  Twitter,
+  CheckCircle2,
+  Share2,
   Filter,
   Ticket,
   ChevronRight
 } from 'lucide-react';
+import { getOrganiserPublicProfile } from '../../lib/supabase';
 
 interface OrganizerProfilePageProps {
   events: Event[];
@@ -23,26 +24,40 @@ interface OrganizerProfilePageProps {
 const OrganizerProfilePage: React.FC<OrganizerProfilePageProps> = ({ events }) => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState<'UPCOMING' | 'PAST'>('UPCOMING');
+  const [organizer, setOrganizer] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Simulated organizer data - in a real app, this would come from a database query
-  const organizer = {
-    id: id,
-    name: id === 'org1' ? 'Comedy Collective India' : 'Soulfest Productions',
-    avatar: `https://i.pravatar.cc/150?u=${id}`,
-    banner: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1600&auto=format&fit=crop',
-    description: 'Bringing the finest live entertainment and cultural experiences to cities across the nation. Specializing in niche workshops and high-energy concerts.',
-    verified: true,
-    stats: {
-      events: 42,
-      attendees: '12K+',
-      rating: '4.9'
-    }
-  };
+  React.useEffect(() => {
+    const fetchOrg = async () => {
+      if (!id) return;
+      setLoading(true);
+      const data = await getOrganiserPublicProfile(id);
+      if (data) {
+        setOrganizer({
+          ...data,
+          name: data.organization_name,
+          avatar: data.logo_url || `https://ui-avatars.com/api/?name=${data.organization_name}`,
+          banner: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1600&auto=format&fit=crop', // Default banner if not in DB
+          stats: {
+            events: events.filter(e => e.organiser_id === id).length, // Use global event list to count
+            attendees: '2K+', // Mock
+            rating: '4.8' // Mock
+          }
+        });
+      }
+      setLoading(false);
+    };
+    fetchOrg();
+  }, [id, events]);
 
-  const organizerEvents = events.filter(e => e.organiserId === id);
-  const filteredEvents = activeTab === 'UPCOMING' 
-    ? organizerEvents.filter(e => new Date(e.date) >= new Date())
-    : organizerEvents.filter(e => new Date(e.date) < new Date());
+  const organizerEvents = events.filter(e => e.organiser_id === id); // Fix: organiser_id not organiserId
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Profile...</div>;
+  if (!organizer) return <div className="min-h-screen flex items-center justify-center">Organizer not found</div>;
+
+  const filteredEvents = activeTab === 'UPCOMING'
+    ? organizerEvents.filter(e => new Date(e.event_date || e.date) >= new Date()) // Handle different date fields
+    : organizerEvents.filter(e => new Date(e.event_date || e.date) < new Date());
 
   return (
     <div className="min-h-screen bg-[#fffcfd] pb-24">
@@ -50,7 +65,7 @@ const OrganizerProfilePage: React.FC<OrganizerProfilePageProps> = ({ events }) =
       <section className="relative h-[350px] overflow-hidden">
         <img src={organizer.banner} className="w-full h-full object-cover blur-sm scale-105" alt="Banner" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#fffcfd] via-transparent to-black/20"></div>
-        
+
         <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 md:left-24 md:translate-x-0 w-44 h-44 rounded-[2.5rem] bg-white p-2 shadow-2xl z-10 border border-slate-50">
           <img src={organizer.avatar} className="w-full h-full object-cover rounded-[2rem]" alt={organizer.name} />
           {organizer.verified && (
@@ -71,7 +86,7 @@ const OrganizerProfilePage: React.FC<OrganizerProfilePageProps> = ({ events }) =
               <span className="flex items-center gap-1.5"><Users size={14} className="text-[#ff3b5c]" /> {organizer.stats.attendees} Community Size</span>
             </div>
           </div>
-          
+
           <div className="flex gap-4 w-full md:w-auto">
             <button className="flex-1 md:flex-none px-10 py-4 bg-[#ff3b5c] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-pink-100 hover:scale-105 transition-all">
               Follow
@@ -89,14 +104,14 @@ const OrganizerProfilePage: React.FC<OrganizerProfilePageProps> = ({ events }) =
         <div className="lg:col-span-8">
           <div className="flex items-center justify-between mb-12 border-b border-slate-100">
             <div className="flex gap-10">
-              <button 
+              <button
                 onClick={() => setActiveTab('UPCOMING')}
                 className={`pb-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'UPCOMING' ? 'text-[#ff3b5c]' : 'text-slate-300'}`}
               >
                 Upcoming Events
                 {activeTab === 'UPCOMING' && <div className="absolute bottom-0 left-0 w-full h-1 bg-[#ff3b5c] rounded-full"></div>}
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('PAST')}
                 className={`pb-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'PAST' ? 'text-[#ff3b5c]' : 'text-slate-300'}`}
               >
@@ -105,7 +120,7 @@ const OrganizerProfilePage: React.FC<OrganizerProfilePageProps> = ({ events }) =
               </button>
             </div>
             <button className="flex items-center gap-2 text-slate-400 font-black text-[10px] uppercase tracking-widest mb-4">
-               <Filter size={14} /> Filter
+              <Filter size={14} /> Filter
             </button>
           </div>
 
@@ -117,19 +132,19 @@ const OrganizerProfilePage: React.FC<OrganizerProfilePageProps> = ({ events }) =
                 </div>
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-4">
-                     <span className="bg-pink-50 text-[#ff3b5c] px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{event.category}</span>
-                     {event.tickets[0]?.price === 0 && <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">Free RSVP</span>}
+                    <span className="bg-pink-50 text-[#ff3b5c] px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{event.category}</span>
+                    {event.tickets[0]?.price === 0 && <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">Free RSVP</span>}
                   </div>
                   <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-[#ff3b5c] transition-colors">{event.title}</h3>
                   <div className="flex flex-wrap gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                     <span className="flex items-center gap-2"><Calendar size={14} className="text-[#ff3b5c]" /> {new Date(event.date).toLocaleDateString()}</span>
-                     <span className="flex items-center gap-2"><MapPin size={14} className="text-[#ff3b5c]" /> {event.location}</span>
+                    <span className="flex items-center gap-2"><Calendar size={14} className="text-[#ff3b5c]" /> {new Date(event.date).toLocaleDateString()}</span>
+                    <span className="flex items-center gap-2"><MapPin size={14} className="text-[#ff3b5c]" /> {event.location}</span>
                   </div>
                 </div>
                 <div className="flex flex-col justify-center items-end border-l border-slate-50 pl-8 hidden md:flex">
-                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Starting from</p>
-                   <p className="text-2xl font-black text-slate-900">₹{event.tickets[0]?.price || '0'}</p>
-                   <ChevronRight size={24} className="text-slate-200 group-hover:text-[#ff3b5c] group-hover:translate-x-2 transition-all mt-4" />
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Starting from</p>
+                  <p className="text-2xl font-black text-slate-900">₹{event.tickets[0]?.price || '0'}</p>
+                  <ChevronRight size={24} className="text-slate-200 group-hover:text-[#ff3b5c] group-hover:translate-x-2 transition-all mt-4" />
                 </div>
               </Link>
             ))}
@@ -168,14 +183,14 @@ const OrganizerProfilePage: React.FC<OrganizerProfilePageProps> = ({ events }) =
             </div>
 
             <div className="bg-slate-900 p-10 rounded-[3rem] text-white overflow-hidden relative">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff3b5c] rounded-full blur-[80px] opacity-20"></div>
-               <h4 className="text-lg font-black mb-6 flex items-center gap-2">
-                 <CheckCircle2 size={18} className="text-yellow-400" />
-                 Verified Brand
-               </h4>
-               <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                 This organiser is fully vetted by the book my ticket trust & safety team. All transactions are secure and backed by our guarantee.
-               </p>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff3b5c] rounded-full blur-[80px] opacity-20"></div>
+              <h4 className="text-lg font-black mb-6 flex items-center gap-2">
+                <CheckCircle2 size={18} className="text-yellow-400" />
+                Verified Brand
+              </h4>
+              <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                This organiser is fully vetted by the book my ticket trust & safety team. All transactions are secure and backed by our guarantee.
+              </p>
             </div>
           </div>
         </div>

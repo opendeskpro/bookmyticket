@@ -4,149 +4,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Book My Ticket | Experience Live Events</title>
+  <title>bookmyticket | Experience Live Events</title>
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2322d3ee%22/><path d=%22M50 20L30 50H50L45 80L75 40H55L60 20Z%22 fill=%22white%22/></svg>">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap"
+
+  <!-- Optimization: Preconnect to Font Origins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Google Fonts: React Bits Selection -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Figtree:ital,wght@0,300..900;1,300..900&family=Gloria+Hallelujah&family=Gochi+Hand&family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap"
     rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
 
-    .font-marker {
-      font-family: 'Gochi Hand', cursive;
-    }
 
-    .font-marker-bold {
-      font-family: 'Gloria Hallelujah', cursive;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #f8fafc;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    .scrollbar-hide::-webkit-scrollbar {
-      display: none;
-    }
-
-    .scrollbar-hide {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-
-    @keyframes ae-letter-entry {
-      0% {
-        opacity: 0;
-        transform: translateY(40px) scale(0) rotate(-540deg);
-        filter: blur(10px);
-      }
-
-      70% {
-        opacity: 1;
-        transform: translateY(-8px) scale(1.1) rotate(15deg);
-        filter: blur(0);
-      }
-
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1) rotate(0);
-        filter: blur(0);
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '.theme-dark'],
+      theme: {
+        extend: {
+          fontFamily: {
+            brand: ['Outfit', 'sans-serif'],
+            sans: ['Figtree', 'sans-serif'],
+            heading: ['"Bricolage Grotesque"', 'sans-serif'],
+            marker: ['"Gochi Hand"', 'cursive'],
+            'marker-bold': ['"Gloria Hallelujah"', 'cursive'],
+          },
+          letterSpacing: {
+            tighter: '-0.05em',
+            tight: '-0.025em',
+          }
+        }
       }
     }
-
-    @keyframes logo-float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-4px);
-      }
-    }
-
-    @keyframes my-pulse-glow {
-
-      0%,
-      100% {
-        filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.2));
-        transform: scale(1);
-      }
-
-      50% {
-        filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6));
-        transform: scale(1.05);
-      }
-    }
-
-    .logo-main-wrapper {
-      display: inline-flex;
-      align-items: center;
-      animation: logo-float 4s ease-in-out infinite;
-      animation-delay: 2s;
-    }
-
-    .char-entry {
-      display: inline-block;
-      opacity: 0;
-      animation: ae-letter-entry 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      white-space: pre;
-      will-change: transform, opacity;
-    }
-
-    .my-text-wrapper {
-      display: inline-flex;
-      animation: my-pulse-glow 3s ease-in-out infinite;
-      animation-delay: 1.5s;
-    }
-
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-
-      #printable-ticket,
-      #printable-ticket * {
-        visibility: visible;
-      }
-
-      #printable-ticket {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 20px;
-        box-shadow: none !important;
-        border: 1px solid #e2e8f0 !important;
-      }
-
-      .no-print {
-        display: none !important;
-      }
-    }
-  </style>
-  <script type="module" crossorigin src="/assets/index-Bf3FwLaT.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CuXgZ0v1.css">
+  </script>
+  <script type="module" crossorigin src="/assets/index-BcnhKwge.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-_vARjmAU.css">
 </head>
 
-<body class="bg-[#fdfdfd] text-slate-900">
+<body class="bg-[#fdfdfd] text-slate-900 font-sans antialiased">
   <div id="root"></div>
 </body>
 

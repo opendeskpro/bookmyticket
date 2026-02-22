@@ -30,7 +30,7 @@ type LoginMethod = 'EMAIL' | 'OTP';
 const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(location.state?.isRegistering || false);
   const [loginMethod, setLoginMethod] = useState<LoginMethod>('EMAIL');
   const [authStep, setAuthStep] = useState<AuthStep>('FORM');
   const [loading, setLoading] = useState(false);
@@ -45,7 +45,22 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
 
+  // Extract role from Query Params or Location State
+  const queryParams = new URLSearchParams(location.search);
+  const roleParam = queryParams.get('role');
+  const modeParam = queryParams.get('mode');
+
+  const [role, setRole] = useState<UserRole>(
+    (roleParam as UserRole) || (location.state?.role as UserRole) || UserRole.PUBLIC
+  );
+
   const from = location.state?.from?.pathname || null;
+
+  useEffect(() => {
+    if (modeParam === 'signup' || location.state?.isRegistering) {
+      setIsRegistering(true);
+    }
+  }, [modeParam, location.state]);
 
   useEffect(() => {
     let interval: any;
@@ -70,7 +85,7 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
     } else if (role === UserRole.ORGANISER) {
       demoEmail = 'demo@organizer.com';
       demoName = 'Professional Organizer';
-      path = '/organiser/dashboard';
+      path = '/organizer/dashboard';
     } else {
       demoEmail = 'demo@user.com';
       demoName = 'Demo User';
@@ -106,10 +121,11 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
 
     try {
       if (isRegistering) {
-        const response = await api.auth.register({
+        await api.auth.register({
           email,
           password,
-          full_name: name.trim()
+          full_name: name.trim(),
+          role: role
         });
         setError("Registration successful! Please log in.");
         setIsRegistering(false);
@@ -118,17 +134,13 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
 
         if (response.session) {
           localStorage.setItem('token', response.session.access_token);
-
-          // Fetch full profile info including role
           const profile = await api.auth.me();
           if (profile) {
             onAuth(profile);
-
             if (profile.role === UserRole.ADMIN) navigate('/admin/dashboard');
-            else if (profile.role === UserRole.ORGANISER) navigate('/organiser/dashboard');
-            else navigate(from || '/');
+            else if (profile.role === UserRole.ORGANISER) navigate('/organizer/dashboard');
+            else navigate(from || '/user/dashboard');
           } else {
-            // Fallback if profile doesn't exist yet but auth is valid
             const fallbackUser: User = {
               id: response.user.id,
               email: response.user.email,
@@ -141,7 +153,6 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
           }
         }
       }
-
     } catch (err: any) {
       setError(err.message || "Invalid authentication attempt");
     } finally {
@@ -149,189 +160,153 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
     }
   };
 
-  const verifyMobileOtp = async (token: string) => {
-    setError("Mobile verification is currently handled via email registration.");
-  };
-
   return (
-    <div className="min-h-screen flex font-inter overflow-hidden">
-      {/* LEFT SIDE: Brand Sidebar (Split design 30%) */}
-      <div className="hidden lg:flex w-[30%] bg-gradient-to-b from-[#7209B7] to-[#FF006E] relative flex-col px-12 py-20 shrink-0 overflow-hidden">
-        {/* Abstract background circles */}
-        <div className="absolute top-[-10%] right-[-20%] w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-[-10%] left-[-20%] w-[300px] h-[300px] bg-black/10 rounded-full blur-3xl"></div>
-
-        <div className="relative z-10 flex flex-col h-full">
-          <Link to="/" className="inline-block transform hover:scale-105 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                <ShieldCheck size={24} className="text-[#FF006E]" />
-              </div>
-              <span className="text-2xl font-black text-white tracking-tighter">TICKET9</span>
-            </div>
+    <div className="min-h-screen flex flex-col font-inter">
+      {/* Auth Header - Logo */}
+      <header className="bg-white border-b border-gray-100 py-4">
+        <div className="max-w-[1440px] w-[95%] mx-auto flex items-center justify-between">
+          <Link to="/" className="hover:opacity-90 transition-opacity">
+            <Logo />
           </Link>
-
-          <div className="mt-24 space-y-6">
-            <h2 className="text-4xl font-black text-white leading-tight tracking-tight uppercase">
-              GROW YOUR EVENTS <br />
-              <span className="text-white/70 italic">EXPONENTIALLY.</span>
-            </h2>
-            <p className="text-white/80 text-sm font-medium leading-relaxed max-w-xs">
-              Join the ecosystem of over 200,000+ event lovers across the nation. Experience the future of event management.
-            </p>
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hidden sm:block">
+            Experience Live Events
           </div>
+        </div>
+      </header>
 
-          <div className="mt-16 space-y-8">
-            {[
-              { id: '01', title: 'CREATE EVENT PAGE', desc: 'DO-IT-YOURSELF APPROACH' },
-              { id: '02', title: 'EASY SIGN-UP', desc: 'SUPER QUICK ACTIVATION' },
-              { id: '03', title: 'SIMPLE REGISTRATION', desc: 'NO HASSLE' },
-              { id: '04', title: 'QUICK SETUP', desc: 'ZERO SETUP COST' }
-            ].map((f) => (
-              <div key={f.id} className="flex gap-4 group">
-                <span className="text-xl font-black text-white/30 group-hover:text-white transition-colors duration-500">{f.id}</span>
-                <div>
-                  <h4 className="text-xs font-black text-white tracking-widest uppercase">{f.title}</h4>
-                  <p className="text-[10px] font-bold text-white/40 tracking-widest uppercase mt-0.5">{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-auto opacity-30">
-            <p className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
-              © {new Date().getFullYear()} TICKET9 GLOBAL
-            </p>
-          </div>
+      {/* Promo Ticker - Global Coupons */}
+      <div className="bg-[#F84464] text-white py-2 overflow-hidden whitespace-nowrap relative">
+        <div className="flex items-center gap-12 animate-scroll-fast font-bold text-xs uppercase tracking-widest">
+          {[1, 2, 3, 4, 5].map(i => (
+            <span key={i} className="flex items-center gap-2">
+              <ShieldCheck size={14} /> USE CODE: <span className="text-[#FFCC00]">BMS50</span> FOR 50% OFF ON FIRST BOOKING! ✨
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* RIGHT SIDE: Auth Form (Split design 70%) */}
-      <div className="flex-1 bg-white flex flex-col items-center justify-center py-12 px-6 lg:px-20 relative overflow-y-auto">
-        <div className="w-full max-w-md">
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">
-                {isRegistering ? 'JOIN TICKET9' : 'GOOD TO SEE YOU'}<br />
-                <span className="text-[#FF5862] italic">{isRegistering ? 'TODAY 🚀' : 'AGAIN 👋'}</span>
-              </h1>
-              <p className="text-slate-500 text-sm font-bold mt-4">
-                {isRegistering ? (
-                  <>Already a member? <button onClick={() => setIsRegistering(false)} className="text-[#FF5862] hover:underline font-black">Sign in</button></>
-                ) : (
-                  <>Don't have an account? <button onClick={() => setIsRegistering(true)} className="text-[#FF5862] hover:underline font-black">Create one now</button></>
-                )}
-              </p>
-            </div>
+      <div className="flex-1 flex items-center justify-center p-6 mt-[-40px]">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 reveal">
 
-            {/* Dev Mode Toggle */}
-            <div className="absolute top-8 right-8 flex items-center gap-3">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Developer Mode</span>
-              <button
-                onClick={() => setIsSimulationMode(!isSimulationMode)}
-                className={`w-12 h-6 rounded-full transition-all relative ${isSimulationMode ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-200'}`}
-              >
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isSimulationMode ? 'left-7' : 'left-1'}`} />
+          {/* Top Promotional Banner Layer (requested: below banner above notation) */}
+          <div className="relative h-24 bg-[#333333] flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 opacity-40">
+              <img src="https://images.unsplash.com/photo-1470229722913-7ea0d11e5922?q=80&w=1000" alt="Banner" className="w-full h-full object-cover" />
+            </div>
+            <div className="relative z-10 text-center">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FFCC00] mb-1">Limited Time Offer</p>
+              <h3 className="text-white text-lg font-black tracking-tight">Enjoy Unlimited Entertainment</h3>
+            </div>
+          </div>
+
+          <div className="p-8 space-y-8">
+            <div className="text-center relative">
+              <h2 className="text-xl font-black text-[#333333]">Get Started</h2>
+
+              {/* Close button fake */}
+              <button onClick={() => navigate('/')} className="absolute right-0 top-0 text-gray-400 hover:text-black transition-all">
+                <div className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">✕</div>
               </button>
             </div>
 
-            {isSimulationMode && (
-              <div className="mb-10 p-6 bg-slate-950 rounded-3xl border border-slate-800 animate-in zoom-in-95 duration-500">
-                <div className="flex items-center gap-2 mb-4">
-                  <ShieldAlert size={14} className="text-amber-400" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Simulated Entry Points</span>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <button onClick={() => handleDemoLogin(UserRole.ADMIN)} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black text-white hover:bg-amber-500 hover:text-slate-950 transition-all uppercase tracking-widest">Super Admin</button>
-                  <button onClick={() => handleDemoLogin(UserRole.ORGANISER)} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black text-white hover:bg-[#FF5862] transition-all uppercase tracking-widest">Organiser</button>
-                  <button onClick={() => handleDemoLogin(UserRole.PUBLIC)} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black text-white hover:bg-slate-800 transition-all uppercase tracking-widest">Public User</button>
-                </div>
-              </div>
-            )}
+            {/* Social Logins - BMS Style Vertical Stack */}
+            <div className="space-y-3">
+              <button onClick={() => handleSocialLogin('google')} className="w-full flex items-center justify-center gap-4 py-3 px-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-all font-bold text-gray-600 text-sm">
+                <Chrome size={20} className="text-[#4285F4]" />
+                Continue with Google
+              </button>
+              <button disabled className="w-full flex items-center justify-center gap-4 py-3 px-4 border border-gray-200 rounded-md opacity-50 cursor-not-allowed font-bold text-gray-400 text-sm">
+                <Apple size={20} className="text-black" />
+                Continue with Apple
+              </button>
+              <button disabled className="w-full flex items-center justify-center gap-4 py-3 px-4 border border-gray-200 rounded-md opacity-50 cursor-not-allowed font-bold text-gray-400 text-sm">
+                <Facebook size={20} className="text-[#1877F2]" />
+                Continue with Facebook
+              </button>
+            </div>
 
-            {error && (
-              <div className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-sm flex items-center gap-3 animate-in shake-in">
-                <AlertCircle size={16} /> {error}
-              </div>
-            )}
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+              <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest"><span className="bg-white px-4 text-gray-400">OR</span></div>
+            </div>
 
             <form onSubmit={handleAuth} className="space-y-6">
-              {isRegistering && (
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider ml-1">Full Name</label>
-                  <div className="relative group">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#FF5862] transition-colors" size={18} />
-                    <input
-                      type="text" required value={name} onChange={e => setName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-[#FF5862]/40 focus:ring-4 focus:ring-[#FF5862]/5 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300"
-                      placeholder="e.g. John Doe"
-                    />
-                  </div>
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-100 text-[#F84464] rounded-md text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-2">
+                  <AlertCircle size={14} /> {error}
                 </div>
               )}
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider ml-1">Email Address</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#FF5862] transition-colors" size={18} />
+              <div className="space-y-4">
+                {isRegistering && (
                   <input
-                    type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-[#FF5862]/40 focus:ring-4 focus:ring-[#FF5862]/5 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm"
-                    placeholder="example@email.com"
+                    type="text" placeholder="Full Name" required value={name} onChange={e => setName(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded bg-transparent border border-gray-200 focus:border-[#F84464] outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400 text-sm"
                   />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider">Password</label>
-                  {!isRegistering && <button type="button" className="text-[11px] font-black text-[#FF5862] hover:underline uppercase tracking-tight transition-colors">Forgot password?</button>}
-                </div>
-                <div className="relative group">
-                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#FF5862] transition-colors" size={18} />
+                )}
+                <input
+                  type="email" placeholder="Email Address" required value={email} onChange={e => setEmail(e.target.value)}
+                  className="w-full px-4 py-3.5 rounded bg-transparent border border-gray-200 focus:border-[#F84464] outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400 text-sm"
+                />
+                <div className="relative">
                   <input
-                    type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-12 py-4 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-[#FF5862]/40 focus:ring-4 focus:ring-[#FF5862]/5 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm"
-                    placeholder="••••••••"
+                    type={showPassword ? "text" : "password"} placeholder="Password" required value={password} onChange={e => setPassword(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded bg-transparent border border-gray-200 focus:border-[#F84464] outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400 text-sm"
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
-              <div className="pt-4 space-y-6 text-center">
-                <button type="submit" disabled={loading} className="w-full py-4 bg-[#FF5862] text-white rounded-xl font-black uppercase text-[12px] tracking-[0.2em] shadow-lg shadow-[#FF5862]/20 hover:bg-[#ff404a] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-3">
-                  {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                    <>
-                      {isRegistering ? 'LET\'S GO' : 'LOG IN'}
-                      <ArrowRight size={16} />
-                    </>
-                  )}
-                </button>
+              <button type="submit" disabled={loading} className="w-full py-4 bg-[#F84464] text-white rounded-md font-bold text-sm hover:bg-[#d63a56] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm">
+                {loading ? <Loader2 className="animate-spin" size={18} /> : (isRegistering ? 'Register' : 'Login')}
+              </button>
 
-                <div className="relative py-4">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                  <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.2em]"><span className="bg-white px-4 text-slate-300">OR</span></div>
-                </div>
-
-                <button
-                  onClick={() => handleSocialLogin('google')}
-                  disabled={loading}
-                  type="button"
-                  className="w-full flex items-center justify-center gap-4 py-4 bg-white border border-slate-200 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.98] disabled:opacity-50"
-                >
-                  <Chrome size={18} className="text-[#4285F4]" />
-                  Continue with Google
+              <div className="text-center">
+                <button onClick={() => setIsRegistering(!isRegistering)} type="button" className="text-xs font-bold text-gray-500 hover:text-[#F84464] transition-colors">
+                  {isRegistering ? 'Already have an account? Login' : "Don't have an account? Create one"}
                 </button>
               </div>
             </form>
+
+            <div className="text-[10px] text-center text-gray-400 leading-relaxed font-medium">
+              I agree to the <span className="underline cursor-pointer">Terms & Conditions</span> & <span className="underline cursor-pointer">Privacy Policy</span>
+            </div>
           </div>
         </div>
+
+        {/* Floating Dev Toggle (Corner) */}
+        <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-white p-2 rounded-full shadow-lg border border-gray-100">
+          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-3">Dev Mode</span>
+          <button
+            onClick={() => setIsSimulationMode(!isSimulationMode)}
+            className={`w-10 h-6 rounded-full transition-all relative ${isSimulationMode ? 'bg-[#F84464]' : 'bg-gray-200'}`}
+          >
+            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isSimulationMode ? 'left-5' : 'left-1'}`} />
+          </button>
+        </div>
+
+        {isSimulationMode && (
+          <div className="fixed bottom-24 right-8 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 animate-in slide-in-from-bottom-4">
+            <div className="flex items-center gap-2 mb-4 border-b pb-2">
+              <ShieldAlert size={14} className="text-[#F84464]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#333333]">Simulation Login</span>
+            </div>
+            <div className="space-y-2">
+              <button onClick={() => handleDemoLogin(UserRole.ADMIN)} className="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded text-[10px] font-bold uppercase transition-all">Super Admin</button>
+              <button onClick={() => handleDemoLogin(UserRole.ORGANISER)} className="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded text-[10px] font-bold uppercase transition-all">Organizer</button>
+              <button onClick={() => handleDemoLogin(UserRole.PUBLIC)} className="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded text-[10px] font-bold uppercase transition-all">Public User</button>
+            </div>
+          </div>
+        )}
       </div>
+
+      <footer className="py-6 text-center text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+        © {new Date().getFullYear()} bookmyticket • all rights reserved
+      </footer>
     </div>
   );
-
 };
 
 export default AuthPage;
