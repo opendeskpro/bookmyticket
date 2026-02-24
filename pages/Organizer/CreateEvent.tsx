@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Button from '../../components/Shared/UI/Button';
 import SeatLayoutBuilder from '../../components/Organizer/SeatLayoutBuilder';
 import { Image as ImageIcon, Calendar, MapPin, DollarSign, Layout, Type, Loader2 } from 'lucide-react';
 import { api } from '../../lib/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { User } from '../../types';
+import LocationPicker from '../../components/Organizer/LocationPicker';
 
 interface CreateEventProps {
     user: User | null;
+    onRefreshEvents?: () => void;
 }
 
-const CreateEvent: React.FC<CreateEventProps> = ({ user }) => {
+const CreateEvent: React.FC<CreateEventProps> = ({ user, onRefreshEvents }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const selectedEventType = (location.state as { selectedEventType?: string } | null)?.selectedEventType;
     const [step, setStep] = useState(1);
     const [isSeated, setIsSeated] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // Form State
+    // Form State (category prefilled when coming from Choose Event Type)
     const [formData, setFormData] = useState({
         title: '',
         date: '',
@@ -27,7 +30,13 @@ const CreateEvent: React.FC<CreateEventProps> = ({ user }) => {
         venue: '',
         description: '',
         banner_url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000&auto=format&fit=crop',
-        category: 'Entertainment'
+        category: selectedEventType || 'Entertainment',
+        latitude: 0,
+        longitude: 0,
+        country: '',
+        state: '',
+        district: '',
+        pincode: ''
     });
 
     const [showtimes, setShowtimes] = useState<string[]>([]);
@@ -45,8 +54,15 @@ const CreateEvent: React.FC<CreateEventProps> = ({ user }) => {
     };
 
     const handlePublish = async () => {
-        if (!formData.title || !formData.date || !formData.city) {
-            toast.error("Please fill in the required fields");
+        if (!formData.title || !formData.date) {
+            toast.error("Please fill in the event title and date");
+            setStep(1);
+            return;
+        }
+
+        // Warn but don't block if no map location set
+        if (!formData.latitude && !formData.city) {
+            toast.error("Please set a location on the map or enter a city");
             setStep(1);
             return;
         }
@@ -56,11 +72,20 @@ const CreateEvent: React.FC<CreateEventProps> = ({ user }) => {
             await api.events.create({
                 ...formData,
                 event_date: formData.date,
-                start_time: showtimes[0] || '19:00', // Take first slot or default
+                start_time: showtimes[0] || '19:00',
                 banner_url: formData.banner_url,
-                is_virtual: false,
-                status: 'PUBLISHED'
+                status: 'PUBLISHED',
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+                country: formData.country,
+                state: formData.state,
+                district: formData.district,
+                pincode: formData.pincode
             });
+
+            if (onRefreshEvents) {
+                await onRefreshEvents();
+            }
 
             toast.success('Event Published Successfully!');
             navigate('/organizer/events');
@@ -145,25 +170,62 @@ const CreateEvent: React.FC<CreateEventProps> = ({ user }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Venue & City</label>
-                                    <div className="flex gap-4">
-                                        <div className="relative flex-1">
-                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Category</label>
+                                    <select
+                                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF006E]/20 outline-none bg-white font-medium"
+                                        value={formData.category}
+                                        onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                    >
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Comedy Show">Comedy Show</option>
+                                        <option value="Concert">Concert</option>
+                                        <option value="Conference">Conference</option>
+                                        <option value="Workshop">Workshop</option>
+                                        <option value="Exhibition">Exhibition</option>
+                                        <option value="Sports">Sports</option>
+                                        <option value="Meetup">Meetup</option>
+                                        <option value="Webinar">Webinar</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <LocationPicker
+                                        onLocationSelect={(data) => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                latitude: data.latitude,
+                                                longitude: data.longitude,
+                                                country: data.country,
+                                                state: data.state,
+                                                district: data.district,
+                                                city: data.city,
+                                                venue: data.address,
+                                                pincode: data.pincode
+                                            }));
+                                        }}
+                                        initialValue={formData.venue}
+                                    />
+                                    <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Refine Address (Optional)</p>
+                                        <div className="flex gap-4">
+                                            <div className="relative flex-1">
+                                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                                <input
+                                                    type="text"
+                                                    className="w-full pl-10 p-3 border border-gray-200 rounded-lg outline-none bg-white font-medium"
+                                                    placeholder="Building, Floor, Suite (Optional)"
+                                                    value={formData.venue}
+                                                    onChange={e => setFormData({ ...formData, venue: e.target.value })}
+                                                />
+                                            </div>
                                             <input
                                                 type="text"
-                                                className="w-full pl-10 p-3 border border-gray-200 rounded-lg outline-none"
-                                                placeholder="e.g. Grand Arena"
-                                                value={formData.venue}
-                                                onChange={e => setFormData({ ...formData, venue: e.target.value })}
+                                                className="w-32 p-3 border border-gray-200 rounded-lg outline-none bg-white font-medium italic"
+                                                placeholder="City"
+                                                value={formData.city}
+                                                readOnly
                                             />
                                         </div>
-                                        <input
-                                            type="text"
-                                            className="w-32 p-3 border border-gray-200 rounded-lg outline-none"
-                                            placeholder="City"
-                                            value={formData.city}
-                                            onChange={e => setFormData({ ...formData, city: e.target.value })}
-                                        />
                                     </div>
                                 </div>
                                 <div>
@@ -176,6 +238,7 @@ const CreateEvent: React.FC<CreateEventProps> = ({ user }) => {
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                                     ></textarea>
                                 </div>
+
                             </div>
 
                             <div className="flex justify-end pt-4">

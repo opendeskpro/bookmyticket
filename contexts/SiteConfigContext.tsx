@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getSiteConfig, updateSiteConfig as updateSupabaseConfig } from '../lib/supabase';
 
 // Define types for each section
@@ -206,11 +206,31 @@ const SiteConfigContext = createContext<SiteConfigContextType | undefined>(undef
 export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [config, setConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
     const [loading, setLoading] = useState(true);
+    const fetchInitiated = useRef(false);
 
     useEffect(() => {
+        if (fetchInitiated.current) return;
+        fetchInitiated.current = true;
+
         const fetchConfig = async () => {
             try {
-                // Fetch all config sections
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Config fetch timed out")), 5000)
+                );
+
+                // Fetch all config sections with a race
+                const results = await Promise.race([
+                    Promise.all([
+                        getSiteConfig('homepage'),
+                        getSiteConfig('settings'),
+                        getSiteConfig('brand_assets'),
+                        getSiteConfig('footer_links'),
+                        getSiteConfig('mobile_menu'),
+                        getSiteConfig('movie_api')
+                    ]),
+                    timeoutPromise
+                ]) as any[];
+
                 const [
                     savedConfig,
                     settingsConfig,
@@ -218,16 +238,10 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     footerLinks,
                     mobileMenu,
                     movieApi
-                ] = await Promise.all([
-                    getSiteConfig('homepage'),
-                    getSiteConfig('settings'),
-                    getSiteConfig('brand_assets'),
-                    getSiteConfig('footer_links'),
-                    getSiteConfig('mobile_menu'),
-                    getSiteConfig('movie_api')
-                ]);
+                ] = results;
 
                 let newConfig = { ...DEFAULT_CONFIG };
+                // ... rest of the mapping ...
 
                 if (savedConfig) newConfig = { ...newConfig, ...savedConfig };
                 if (settingsConfig) newConfig = { ...newConfig, ...settingsConfig };

@@ -6,9 +6,13 @@ import { Save, Upload, Plus, Trash, Globe, Layout, Image as ImageIcon, Smartphon
 import { api } from '../../lib/api';
 import { toast } from 'react-hot-toast';
 import { useSiteConfig } from '../../contexts/SiteConfigContext';
-import { MOCK_USERS } from '../../constants/mockData';
+import { User } from '../../types';
 
-const AdminSiteSettings = () => {
+interface AdminSiteSettingsProps {
+    user: User | null;
+}
+
+const AdminSiteSettings: React.FC<AdminSiteSettingsProps> = ({ user }) => {
     const navigate = useNavigate();
     const { updateConfig } = useSiteConfig();
     const [loading, setLoading] = useState(true);
@@ -46,9 +50,6 @@ const AdminSiteSettings = () => {
     const [searchParams] = useSearchParams();
     const tabParam = searchParams.get('tab') || 'general';
     const [activeTab, setActiveTab] = useState<'general' | 'footer' | 'mobile' | 'movie_api'>('general');
-
-    // Mock Admin User for DashboardLayout
-    const user = MOCK_USERS[2];
 
     // Sync state with URL params
     useEffect(() => {

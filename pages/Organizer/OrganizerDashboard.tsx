@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { User, UserRole } from '../../types';
-import { AreaChart, Calendar, TrendingUp } from 'lucide-react';
+import { AreaChart, Calendar, TrendingUp, Loader2 } from 'lucide-react';
+import { getOrganizerStats } from '../../lib/supabase';
 
 interface OrganizerDashboardProps {
     user: User | null;
@@ -10,14 +11,30 @@ interface OrganizerDashboardProps {
 
 const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ user }) => {
     const navigate = useNavigate();
+    const [stats, setStats] = React.useState({ totalEvents: 0, ticketsSold: 0, totalRevenue: 0 });
+    const [loadingStats, setLoadingStats] = React.useState(true);
 
     useEffect(() => {
         if (!user) {
             navigate('/auth');
+            return;
         }
+
+        const fetchStats = async () => {
+            try {
+                const data = await getOrganizerStats(user.id);
+                setStats(data);
+            } catch (error) {
+                console.error("Error fetching organiser stats:", error);
+            } finally {
+                setLoadingStats(false);
+            }
+        };
+
+        fetchStats();
     }, [user, navigate]);
 
-    if (!user) return null; // Render nothing while redirecting
+    if (!user) return null;
 
     return (
         <DashboardLayout user={user}>
@@ -28,7 +45,7 @@ const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ user }) => {
                     <p className="text-gray-500">Welcome back, {user.organizationName || user.name}.</p>
                 </div>
                 <button
-                    onClick={() => navigate('/organizer/create-event')}
+                    onClick={() => navigate('/organizer/choose-event-type')}
                     className="bg-[#FF006E] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#ff4650] transition-colors shadow-lg shadow-red-500/20"
                 >
                     + Create Event
@@ -54,9 +71,9 @@ const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ user }) => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {[
-                    { label: 'Total Events', value: '0', icon: <Calendar size={20} className="text-blue-500" />, trend: '+0%' },
-                    { label: 'Tickets Sold', value: '0', icon: <TrendingUp size={20} className="text-emerald-500" />, trend: '+0%' },
-                    { label: 'Total Revenue', value: '₹0', icon: <span className="text-xl font-bold text-yellow-500">₹</span>, trend: '+0%' },
+                    { label: 'Total Events', value: loadingStats ? '...' : stats.totalEvents.toString(), icon: <Calendar size={20} className="text-blue-500" />, trend: 'Live' },
+                    { label: 'Tickets Sold', value: loadingStats ? '...' : stats.ticketsSold.toString(), icon: <TrendingUp size={20} className="text-emerald-500" />, trend: 'Live' },
+                    { label: 'Total Revenue', value: loadingStats ? '...' : `₹${stats.totalRevenue.toLocaleString()}`, icon: <span className="text-xl font-bold text-yellow-500">₹</span>, trend: 'Live' },
                     { label: 'Avg. Occupancy', value: '0%', icon: <AreaChart size={20} className="text-purple-500" />, trend: 'Stable' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-32 hover:shadow-md transition-shadow cursor-default">
@@ -84,7 +101,7 @@ const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ user }) => {
                     </div>
                     <h2 className="text-xl font-bold text-[#1E293B] mb-2">No Sales Yet</h2>
                     <p className="text-gray-500 text-sm max-w-[250px] mb-6">Create and publish your first event to start seeing ticket sales data here.</p>
-                    <button onClick={() => navigate('/organizer/create-event')} className="text-[#FF006E] font-bold text-sm hover:underline">
+                    <button onClick={() => navigate('/organizer/choose-event-type')} className="text-[#FF006E] font-bold text-sm hover:underline">
                         Create an Event →
                     </button>
                 </div>

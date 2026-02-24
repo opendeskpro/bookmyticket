@@ -1,14 +1,17 @@
 import React from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Button from '../../components/Shared/UI/Button';
 import { Save, Server, CreditCard, Mail } from 'lucide-react';
+import { User } from '../../types';
 
-const SystemSettings: React.FC = () => {
-    const admin = MOCK_USERS[2];
+interface SystemSettingsProps {
+    user: User | null;
+}
+
+const SystemSettings: React.FC<SystemSettingsProps> = ({ user }) => {
 
     return (
-        <DashboardLayout user={admin}>
+        <DashboardLayout user={user}>
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-2xl font-bold">System Configuration</h1>

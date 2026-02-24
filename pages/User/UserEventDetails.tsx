@@ -1,19 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MOCK_EVENTS } from '../../constants/mockData';
 import { MapPin, Calendar, Share2, ArrowLeft } from 'lucide-react';
 import Button from '../../components/Shared/UI/Button';
 import Badge from '../../components/Shared/UI/Badge';
 import SeatMap from '../../components/User/SeatMap';
+import { api } from '../../lib/api';
+import { Event } from '../../types';
 
 const UserEventDetails: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const event = MOCK_EVENTS.find(e => e.id === id);
+    const [event, setEvent] = useState<Event | null>(null);
     const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
     const [ticketQuantity, setTicketQuantity] = useState(1);
 
-    if (!event) return <div>Event not found</div>;
+    useEffect(() => {
+        if (!id) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const fetched = await api.events.get(id);
+                if (!cancelled) setEvent(fetched);
+            } catch {
+                if (!cancelled) setEvent(null);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [id]);
+
+    if (!event) return <div className="p-6">Event not found</div>;
 
     const handleSeatClick = (seatId: string) => {
         if (selectedSeats.includes(seatId)) {

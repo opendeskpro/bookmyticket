@@ -20,6 +20,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  full_name?: string; // New: matches backend 'full_name' column
   role: UserRole;
   walletBalance?: number; // Made optional as it wasn't in mock data
   isMobileVerified?: boolean;
@@ -82,7 +83,10 @@ export interface Event {
   latitude?: number;
   longitude?: number;
   country?: string;
-  zipCode?: string;
+  state?: string;
+  district?: string;
+  pincode?: string;
+  zipCode?: string; // Kept for compat
   location?: string;
   banner: string;
   banner_url?: string;
@@ -92,6 +96,8 @@ export interface Event {
   start_time?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   isVirtual?: boolean;
+  is_virtual?: boolean; // Snake case for partial Supabase compat
+  meeting_id?: string;
   isExclusive?: boolean;
   isSpotlight?: boolean;
   tickets: TicketType[];

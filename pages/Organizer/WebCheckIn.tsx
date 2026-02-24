@@ -1,13 +1,46 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS, MOCK_ATTENDEES } from '../../constants/mockData';
 import Badge from '../../components/Shared/UI/Badge';
 import { Search, QrCode, CheckCircle, Clock } from 'lucide-react';
+import { User } from '../../types';
+import { getOrganiserIdForUser, getBookingsForOrganiser } from '../../lib/supabase';
 
-const WebCheckIn: React.FC = () => {
-    const user = MOCK_USERS[1];
+interface WebCheckInProps {
+    user: User | null;
+}
+
+const WebCheckIn: React.FC<WebCheckInProps> = ({ user }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [attendees, setAttendees] = useState(MOCK_ATTENDEES);
+    const [attendees, setAttendees] = useState<any[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                if (!user?.id) return;
+                const organiserId = await getOrganiserIdForUser(user.id);
+                if (!organiserId || cancelled) return;
+                const bookings = await getBookingsForOrganiser(organiserId);
+                if (cancelled) return;
+                // Flatten bookings into attendee rows
+                const rows: any[] = (bookings as any[]).flatMap((b: any) => (b.tickets || []).map((t: any) => ({
+                    id: t.id,
+                    name: b.buyerName || 'Guest',
+                    email: b.buyerEmail || '',
+                    ticketId: t.id,
+                    eventName: b.eventTitle,
+                    ticketType: t.type || 'Standard',
+                    checkInStatus: t.status === 'USED' ? 'CHECKED_IN' : 'PENDING',
+                    checkInTime: t.status === 'USED' ? t.updated_at : null,
+                    purchaseDate: b.created_at
+                })));
+                setAttendees(rows);
+            } catch {
+                if (!cancelled) setAttendees([]);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [user?.id]);
 
     const handleCheckIn = (id: string) => {
         setAttendees(prev => prev.map(a =>

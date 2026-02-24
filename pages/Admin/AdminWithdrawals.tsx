@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Badge from '../../components/Shared/UI/Badge';
 import Button from '../../components/Shared/UI/Button';
 import { Check, X, Clock } from 'lucide-react';
 import { api } from '../../lib/api';
+import { User } from '../../types';
 
-const AdminWithdrawals: React.FC = () => {
-    // Admin user (mock for layout)
-    const admin = MOCK_USERS[2];
+interface AdminWithdrawalsProps {
+    user: User | null;
+}
+
+const AdminWithdrawals: React.FC<AdminWithdrawalsProps> = ({ user }) => {
 
     const [withdrawals, setWithdrawals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ const AdminWithdrawals: React.FC = () => {
     };
 
     return (
-        <DashboardLayout user={admin}>
+        <DashboardLayout user={user}>
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-2xl font-bold">Withdrawal Requests</h1>

@@ -1,16 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Badge from '../../components/Shared/UI/Badge';
 import Button from '../../components/Shared/UI/Button';
-import { UserRole } from '../../types';
+import { User } from '../../types';
 import { Check, X, FileText, ExternalLink } from 'lucide-react';
+import { getOrganizersForAdmin } from '../../lib/supabase';
 
-const AdminApprovals: React.FC = () => {
-    const admin = MOCK_USERS[2];
+interface AdminApprovalsProps {
+    user: User | null;
+}
 
-    // Filter pending organizers
-    const pendingOrganizers = MOCK_USERS.filter(u => u.role === UserRole.ORGANISER && u.kycStatus === 'PENDING');
+const AdminApprovals: React.FC<AdminApprovalsProps> = ({ user }) => {
+    const admin = user;
+    const [pendingOrganizers, setPendingOrganizers] = useState<any[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const organisers = await getOrganizersForAdmin();
+                if (!cancelled) {
+                    setPendingOrganizers((organisers as any[]).filter(o => o.status === 'PENDING'));
+                }
+            } catch {
+                if (!cancelled) setPendingOrganizers([]);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     return (
         <DashboardLayout user={admin}>

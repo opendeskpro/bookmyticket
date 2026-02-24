@@ -1,25 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS, MOCK_PAYOUTS } from '../../constants/mockData';
 import Badge from '../../components/Shared/UI/Badge';
 import Button from '../../components/Shared/UI/Button';
 import { TrendingUp, DollarSign, Clock, Download } from 'lucide-react';
 import { User } from '../../types';
 import { api } from '../../lib/api';
+import { getOrganiserIdForUser, getTransactionsForOrganiser, getWithdrawalsForOrganiser, supabase } from '../../lib/supabase';
 
 interface OrganizerWalletProps {
     user?: User | null;
 }
 
 const OrganizerWallet: React.FC<OrganizerWalletProps> = ({ user }) => {
-    // Fallback to mock user if not provided, but ideally we use the passed user
-    const displayUser = user || MOCK_USERS[1];
+    const displayUser = user || null;
 
-    const [showWithdrawModal, setShowWithdrawModal] = React.useState(false);
-    const [withdrawAmount, setWithdrawAmount] = React.useState('');
-    const [withdrawMethod, setWithdrawMethod] = React.useState('BANK_TRANSFER');
-    const [loading, setLoading] = React.useState(false);
-    const [balance, setBalance] = React.useState(displayUser?.walletBalance || 0);
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [withdrawAmount, setWithdrawAmount] = useState('');
+    const [withdrawMethod, setWithdrawMethod] = useState('BANK_TRANSFER');
+    const [loading, setLoading] = useState(false);
+    const [balance, setBalance] = useState<number>(0);
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [processingTotal, setProcessingTotal] = useState<number>(0);
+    const [revenueTotal, setRevenueTotal] = useState<number>(0);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        (async () => {
+            try {
+                if (!user?.id) return;
+
+                // 1) Wallet balance from profiles
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('wallet_balance')
+                    .eq('id', user.id)
+                    .single();
+                if (!cancelled && profile?.wallet_balance !== undefined) {
+                    setBalance(Number(profile.wallet_balance) || 0);
+                }
+
+                // 2) Organiser-specific ledger
+                const organiserId = await getOrganiserIdForUser(user.id);
+                if (!organiserId || cancelled) return;
+
+                const [txs, withdrawals] = await Promise.all([
+                    getTransactionsForOrganiser(organiserId),
+                    getWithdrawalsForOrganiser(organiserId)
+                ]);
+
+                if (cancelled) return;
+
+                setTransactions(txs as any[]);
+
+                const totalRevenue = (txs as any[])
+                    .filter((t: any) => t.type === 'CREDIT')
+                    .reduce((sum: number, t: any) => sum + Number(t.amount || 0), 0);
+                setRevenueTotal(totalRevenue);
+
+                const processing = (withdrawals as any[])
+                    .filter((w: any) => w.status === 'PENDING')
+                    .reduce((sum: number, w: any) => sum + Number(w.payable || w.amount || 0), 0);
+                setProcessingTotal(processing);
+            } catch (e) {
+                // Leave default zeros on error
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [user?.id]);
 
     const handleWithdraw = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,7 +88,7 @@ const OrganizerWallet: React.FC<OrganizerWalletProps> = ({ user }) => {
     };
 
     return (
-        <DashboardLayout user={displayUser}>
+        <DashboardLayout user={displayUser || null}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold">My Wallet</h1>
@@ -64,7 +113,6 @@ const OrganizerWallet: React.FC<OrganizerWalletProps> = ({ user }) => {
                             <DollarSign size={20} />
                         </div>
                     </div>
-                    {/* Display Real Wallet Balance if available, else mock/default */}
                     <p className="text-3xl font-bold">₹ {balance.toLocaleString()}</p>
                     <p className="text-xs opacity-70 mt-1">Available for withdrawal</p>
                 </div>
@@ -76,8 +124,8 @@ const OrganizerWallet: React.FC<OrganizerWalletProps> = ({ user }) => {
                             <TrendingUp size={20} />
                         </div>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900">₹ 4,50,000</p>
-                    <p className="text-xs text-green-500 mt-1 font-bold">+12% this month</p>
+                    <p className="text-3xl font-bold text-gray-900">₹ {revenueTotal.toLocaleString()}</p>
+                    <p className="text-xs text-green-500 mt-1 font-bold">Total credited to wallet</p>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
@@ -87,8 +135,8 @@ const OrganizerWallet: React.FC<OrganizerWalletProps> = ({ user }) => {
                             <Clock size={20} />
                         </div>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900">₹ 15,000</p>
-                    <p className="text-xs text-gray-400 mt-1">Est. credit by 22 Jun</p>
+                    <p className="text-3xl font-bold text-gray-900">₹ {processingTotal.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">Pending withdrawals</p>
                 </div>
             </div>
 
@@ -110,23 +158,23 @@ const OrganizerWallet: React.FC<OrganizerWalletProps> = ({ user }) => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {MOCK_PAYOUTS.map((payout) => (
-                                <tr key={payout.id} className="hover:bg-gray-50 transition-colors">
+                            {transactions.map((tx) => (
+                                <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 font-mono text-sm text-gray-600">
-                                        {payout.referenceId}
+                                        {tx.id}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-900">
-                                        {payout.date}
+                                        {new Date(tx.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-900">
-                                        Ticket Revenue
+                                        {tx.type === 'CREDIT' ? 'Ticket Revenue' : 'Payout'}
                                     </td>
                                     <td className="px-6 py-4 font-bold text-green-600">
-                                        +₹{payout.amount.toLocaleString()}
+                                        {tx.type === 'CREDIT' ? '+' : '-'}₹{Number(tx.amount || 0).toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <Badge variant={payout.status === 'PAID' ? 'success' : 'warning'}>
-                                            {payout.status}
+                                        <Badge variant={tx.status === 'SUCCESS' ? 'success' : 'warning'}>
+                                            {tx.status}
                                         </Badge>
                                     </td>
                                 </tr>

@@ -38,7 +38,10 @@ import {
 } from 'lucide-react';
 import { Event } from '../../types';
 import { useSiteConfig } from '../../contexts/SiteConfigContext';
-import ScrollVelocity from '../../components/ui/ScrollVelocity';
+import OrganizerRequestForm from '../../components/OrganizerRequestForm';
+import { getCityEventCounts, getFeaturedOrganizers, getHomepageSections } from '../../lib/supabase';
+import * as LucideIcons from 'lucide-react';
+
 
 interface HomePageProps {
   events: Event[];
@@ -49,23 +52,33 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity }) => {
   const { config } = useSiteConfig();
   const [searchTerm, setSearchTerm] = useState('');
-  const [timeLeft, setTimeLeft] = useState({ days: 2, hours: 14, minutes: 45, seconds: 12 });
+  const [showOrganizerForm, setShowOrganizerForm] = useState(false);
+  const [cityCounts, setCityCounts] = useState<Record<string, number>>({});
+  const [liveOrganizers, setLiveOrganizers] = useState<any[]>([]);
+  const [cmsSections, setCmsSections] = useState<any[]>([]);
+  const [activeSlide, setActiveSlide] = useState(0);
 
-  // Mock Data for BookMyTicket Styling
-  const categories = [
-    { name: 'All', icon: <List size={24} />, color: 'bg-[#FF6E4E]' },
-    { name: 'Comedy Show', icon: <Smile size={24} />, color: 'bg-gray-100' },
-    { name: 'Competition', icon: <Trophy size={24} />, color: 'bg-gray-100' },
-    { name: 'Concert', icon: <Mic size={24} />, color: 'bg-gray-100' },
-    { name: 'Conference', icon: <Users size={24} />, color: 'bg-gray-100' },
-    { name: 'Exhibition', icon: <Presentation size={24} />, color: 'bg-gray-100' },
-    { name: 'Entertainment', icon: <FerrisWheel size={24} />, color: 'bg-gray-100' },
-    { name: 'Fun', icon: <Smile size={24} />, color: 'bg-gray-100' },
-    { name: 'Marathon', icon: <Activity size={24} />, color: 'bg-gray-100' },
-    { name: 'Musics', icon: <Headphones size={24} />, color: 'bg-gray-100' },
+  // Icon mapping for CMS
+  const getIcon = (iconName: string, size = 24) => {
+    const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.HelpCircle;
+    return <IconComponent size={size} />;
+  };
+
+  // Default Categories fallback
+  const defaultCategories = [
+    { name: 'All', icon: <LucideIcons.List size={24} />, color: '#FF6E4E' },
+    { name: 'Comedy Show', icon: <LucideIcons.Smile size={24} />, color: '#F3F4F6' },
+    { name: 'Competition', icon: <LucideIcons.Trophy size={24} />, color: '#F3F4F6' },
+    { name: 'Concert', icon: <LucideIcons.Mic size={24} />, color: '#F3F4F6' },
+    { name: 'Conference', icon: <LucideIcons.Users size={24} />, color: '#F3F4F6' },
+    { name: 'Exhibition', icon: <LucideIcons.Presentation size={24} />, color: '#F3F4F6' },
+    { name: 'Entertainment', icon: <LucideIcons.FerrisWheel size={24} />, color: '#F3F4F6' },
+    { name: 'Fun', icon: <LucideIcons.Smile size={24} />, color: '#F3F4F6' },
+    { name: 'Marathon', icon: <LucideIcons.Activity size={24} />, color: '#F3F4F6' },
+    { name: 'Musics', icon: <LucideIcons.Headphones size={24} />, color: '#F3F4F6' },
   ];
 
-  const organizers = [
+  const defaultOrganizers = [
     { name: 'Sunburn Arena', count: '12 Events', color: 'bg-orange-500', logo: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=200&auto=format&fit=crop' },
     { name: 'Comedy Store', count: '8 Events', color: 'bg-purple-500', logo: 'https://images.unsplash.com/photo-1543584756-8f40a802e14f?q=80&w=200&auto=format&fit=crop' },
     { name: 'Live Nation', count: '24 Events', color: 'bg-blue-500', logo: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=200&auto=format&fit=crop' },
@@ -73,6 +86,8 @@ const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity
     { name: 'Tech Conferences', count: '15 Events', color: 'bg-green-500', logo: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=200&auto=format&fit=crop' },
     { name: 'Food Fests', count: '3 Events', color: 'bg-yellow-500', logo: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=200&auto=format&fit=crop' },
   ];
+
+  const displayOrganizers = liveOrganizers.length > 0 ? liveOrganizers : defaultOrganizers;
 
   const cities = [
     { name: 'Coimbatore', image: 'https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=1000&auto=format&fit=crop', count: '10+ Events' },
@@ -99,8 +114,8 @@ const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity
     return { label: `\u20B9 ${minPrice.toLocaleString('en-IN')}`, isFree: false };
   };
 
-  const [activeSlide, setActiveSlide] = useState(0);
-  const heroSlides = [
+  // Hero Slides fallback
+  const defaultHeroSlides = [
     {
       title: "Experience the Magic of Cinema",
       subtitle: "Book tickets for the latest Hollywood and Bollywood blockbusters. Experience the big screen like never before.",
@@ -121,12 +136,46 @@ const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity
     }
   ];
 
+  // Resolve dynamic content
+  const heroBannersSection = cmsSections.find(s => s.section_key === 'hero_banners');
+  const heroSlides = heroBannersSection?.content || defaultHeroSlides;
+
+  const categoryPinsSection = cmsSections.find(s => s.section_key === 'category_pins');
+  const categories = categoryPinsSection
+    ? categoryPinsSection.content.map((c: any) => ({ ...c, icon: getIcon(c.icon) }))
+    : defaultCategories;
+
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % heroSlides.length);
     }, 6000);
     return () => clearInterval(timer);
   }, [heroSlides.length]);
+
+  useEffect(() => {
+    if (window.location.hash === '#organizer-request') {
+      setShowOrganizerForm(true);
+      // Clean up hash without refresh
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    const fetchHomeStats = async () => {
+      try {
+        const [counts, orgs, cms] = await Promise.all([
+          getCityEventCounts(),
+          getFeaturedOrganizers(),
+          getHomepageSections()
+        ]);
+        setCityCounts(counts);
+        setLiveOrganizers(orgs);
+        setCmsSections(cms);
+      } catch (err) {
+        console.error("Error fetching homepage stats:", err);
+      }
+    };
+
+    fetchHomeStats();
+  }, []);
 
   return (
     <div className="min-h-screen pb-20 selection:bg-[#F84464] selection:text-white transition-colors duration-500">
@@ -177,6 +226,7 @@ const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
               <div className="flex items-center gap-4 border-l border-white/20 pl-6 hidden sm:flex">
+
                 <div className="flex -space-x-4">
                   {[1, 2, 3].map(i => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-[#000000] bg-gray-800 overflow-hidden">
@@ -578,21 +628,27 @@ const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity
         </div>
 
         <div className="relative z-10 space-y-8 py-4">
-          <ScrollVelocity velocity={-80} numCopies={5} className="flex gap-6 px-4">
-            {organizers.map((org, i) => (
-              <Link key={`org-1-${i}`} to={`/events?search=${org.name}`} className="flex-shrink-0 group cursor-pointer w-48 h-28 bg-white border border-gray-100 shadow-sm hover:shadow-[0_10px_30px_rgba(255,0,110,0.15)] rounded-[1rem] flex items-center justify-center p-4 transition-all duration-500 hover:-translate-y-2 hover:border-[#FF006E]/30">
-                <img src={org.logo} alt={org.name} className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-500 max-h-[80px]" onError={handleImageError} />
-              </Link>
-            ))}
-          </ScrollVelocity>
+          {/* Row 1: scrolls left */}
+          <div className="overflow-hidden">
+            <div className="flex gap-6 px-4 animate-marquee-left" style={{ width: 'max-content' }}>
+              {[...displayOrganizers, ...displayOrganizers, ...displayOrganizers, ...displayOrganizers, ...displayOrganizers].map((org, i) => (
+                <Link key={`org-1-${i}`} to={`/events?search=${org.name}`} className="flex-shrink-0 group cursor-pointer w-48 h-28 bg-white border border-gray-100 shadow-sm hover:shadow-[0_10px_30px_rgba(255,0,110,0.15)] rounded-[1rem] flex items-center justify-center p-4 transition-all duration-500 hover:-translate-y-2 hover:border-[#FF006E]/30">
+                  <img src={org.logo} alt={org.name} className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-500 max-h-[80px]" onError={handleImageError} />
+                </Link>
+              ))}
+            </div>
+          </div>
 
-          <ScrollVelocity velocity={80} numCopies={5} className="flex gap-6 px-4">
-            {[...organizers].reverse().map((org, i) => (
-              <Link key={`org-2-${i}`} to={`/events?search=${org.name}`} className="flex-shrink-0 group cursor-pointer w-48 h-28 bg-white border border-gray-100 shadow-sm hover:shadow-[0_10px_30px_rgba(255,0,110,0.15)] rounded-[1rem] flex items-center justify-center p-4 transition-all duration-500 hover:-translate-y-2 hover:border-[#FF006E]/30">
-                <img src={org.logo} alt={org.name} className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-500 max-h-[80px]" onError={handleImageError} />
-              </Link>
-            ))}
-          </ScrollVelocity>
+          {/* Row 2: scrolls right */}
+          <div className="overflow-hidden">
+            <div className="flex gap-6 px-4 animate-marquee-right" style={{ width: 'max-content' }}>
+              {[...[...displayOrganizers].reverse(), ...[...displayOrganizers].reverse(), ...[...displayOrganizers].reverse(), ...[...displayOrganizers].reverse(), ...[...displayOrganizers].reverse()].map((org, i) => (
+                <Link key={`org-2-${i}`} to={`/events?search=${org.name}`} className="flex-shrink-0 group cursor-pointer w-48 h-28 bg-white border border-gray-100 shadow-sm hover:shadow-[0_10px_30px_rgba(255,0,110,0.15)] rounded-[1rem] flex items-center justify-center p-4 transition-all duration-500 hover:-translate-y-2 hover:border-[#FF006E]/30">
+                  <img src={org.logo} alt={org.name} className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-500 max-h-[80px]" onError={handleImageError} />
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -601,21 +657,25 @@ const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity
         <div className="max-w-[1440px] w-[95%] mx-auto mb-12 text-center">
           <h2 className="text-4xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">Popular Cities 🏙️</h2>
         </div>
-        <ScrollVelocity velocity={100} numCopies={5} className="flex gap-8 px-4 py-4">
-          {cities.map((city, i) => (
-            <div
-              key={`city-${i}`}
-              onClick={() => setCurrentCity(city.name)}
-              className="relative w-[280px] h-[180px] rounded-[2rem] overflow-hidden cursor-pointer group flex-shrink-0 shadow-2xl border border-white/10 hover:shadow-[0_15px_40px_rgba(248,68,100,0.3)] transition-all duration-500 hover:-translate-y-2 hover:rotate-1"
-            >
-              <img src={city.image} alt={city.name} className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" onError={handleImageError} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent group-hover:via-black/20 transition-colors flex flex-col items-center justify-end pb-8 text-white">
-                <h3 className="text-2xl font-black drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] group-hover:text-[#FBB040] transition-colors">{city.name}</h3>
-                <p className="text-xs font-bold text-gray-300 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">{city.count}</p>
+        <div className="overflow-hidden">
+          <div className="flex gap-8 px-4 py-4 animate-marquee-left" style={{ width: 'max-content' }}>
+            {[...cities, ...cities, ...cities, ...cities, ...cities].map((city, i) => (
+              <div
+                key={`city-${i}`}
+                onClick={() => setCurrentCity(city.name)}
+                className="relative w-[280px] h-[180px] rounded-[2rem] overflow-hidden cursor-pointer group flex-shrink-0 shadow-2xl border border-white/10 hover:shadow-[0_15px_40px_rgba(248,68,100,0.3)] transition-all duration-500 hover:-translate-y-2 hover:rotate-1"
+              >
+                <img src={city.image} alt={city.name} className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" onError={handleImageError} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent group-hover:via-black/20 transition-colors flex flex-col items-center justify-end pb-8 text-white">
+                  <h3 className="text-2xl font-black drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] group-hover:text-[#FBB040] transition-colors">{city.name}</h3>
+                  <p className="text-xs font-bold text-gray-300 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                    {cityCounts[city.name] ? `${cityCounts[city.name]}+ Events` : 'Check Events'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </ScrollVelocity>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Recommended Events Section */}
@@ -692,6 +752,16 @@ const HomePage: React.FC<HomePageProps> = ({ events, currentCity, setCurrentCity
           </div>
         </div>
       </section>
+
+      {/* Organizer Request Modal */}
+      {showOrganizerForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowOrganizerForm(false)}></div>
+          <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <OrganizerRequestForm onClose={() => setShowOrganizerForm(false)} />
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -1,16 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Badge from '../../components/Shared/UI/Badge';
 import { Search, MoreVertical, Ban, Trash2 } from 'lucide-react';
-import { UserRole } from '../../types';
+import { User, UserRole } from '../../types';
+import { supabase } from '../../lib/supabase';
 
-const ManageUsers: React.FC = () => {
-    const admin = MOCK_USERS[2]; // Admin User
+interface ManageUsersProps {
+    user: User | null;
+}
+
+interface AdminUserRow {
+    id: string;
+    full_name?: string;
+    email?: string;
+    role?: string;
+    wallet_balance?: number;
+}
+
+const ManageUsers: React.FC<ManageUsersProps> = ({ user }) => {
+    const admin = user;
     const [searchTerm, setSearchTerm] = useState('');
+    const [allUsers, setAllUsers] = useState<AdminUserRow[]>([]);
 
-    // In a real app, this would come from an API
-    const allUsers = MOCK_USERS;
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, email, role, wallet_balance')
+                    .order('created_at', { ascending: false });
+                if (error || cancelled) return;
+                setAllUsers(data || []);
+            } catch {
+                if (!cancelled) setAllUsers([]);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     return (
         <DashboardLayout user={admin}>
@@ -47,20 +74,27 @@ const ManageUsers: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {allUsers.map(user => (
+                            {allUsers
+                                .filter(u =>
+                                    (u.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    (u.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+                                )
+                                .map(user => (
                                 <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+                                                {user.full_name?.[0] || '?'}
+                                            </div>
                                             <div>
-                                                <p className="font-bold text-gray-900">{user.name}</p>
-                                                {user.organizationName && <p className="text-xs text-gray-500">{user.organizationName}</p>}
+                                                <p className="font-bold text-gray-900">{user.full_name || 'User'}</p>
+                                                {/* organisationName could come from organisers table if needed */}
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <Badge variant={user.role === UserRole.ADMIN ? 'error' : user.role === UserRole.ORGANISER ? 'info' : 'neutral'}>
-                                            {user.role}
+                                        <Badge variant={user.role === UserRole.ADMIN ? 'danger' : user.role === UserRole.ORGANISER ? 'info' : 'neutral'}>
+                                            {user.role || 'PUBLIC'}
                                         </Badge>
                                     </td>
                                     <td className="px-6 py-4 text-sm">

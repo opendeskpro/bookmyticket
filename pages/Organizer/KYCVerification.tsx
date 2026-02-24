@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Button from '../../components/Shared/UI/Button';
 import { Building2, FileText, CreditCard, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { User } from '../../types';
 
-const KYCVerification: React.FC = () => {
-    const user = MOCK_USERS[1];
+interface KYCVerificationProps {
+    user: User | null;
+}
+
+const KYCVerification: React.FC<KYCVerificationProps> = ({ user }) => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);

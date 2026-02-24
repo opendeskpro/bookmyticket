@@ -1,14 +1,14 @@
 import React from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import { Construction } from 'lucide-react';
+import { User } from '../../types';
 
-const DashboardPlaceholder: React.FC<{ title: string }> = ({ title }) => {
-    // In a real app, use the actual logged-in user context
-    // For now, determining mock user based on URL or generic logic
-    const isOrganizer = window.location.hash.includes('organizer');
-    const user = isOrganizer ? MOCK_USERS[1] : MOCK_USERS[2];
+interface DashboardPlaceholderProps {
+    title: string;
+    user: User | null;
+}
 
+const DashboardPlaceholder: React.FC<DashboardPlaceholderProps> = ({ title, user }) => {
     return (
         <DashboardLayout user={user}>
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">

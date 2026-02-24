@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../Shared/Sidebar';
 import Navbar from '../Shared/Navbar';
 import { User, UserRole } from '../../types';
-import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, CreditCard, FileText, CheckCircle, Smartphone } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, CreditCard, FileText, CheckCircle, Smartphone, ShoppingBag, Banknote, UserPlus, Layers, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 
@@ -21,10 +21,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, user }) => 
     if (user?.role === UserRole.ORGANISER) {
       return [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/organizer/dashboard' },
-        { icon: PlusCircle, label: 'Create Event', path: '/organizer/create-event' },
+        { icon: PlusCircle, label: 'Create Event', path: '/organizer/choose-event-type' },
         { icon: Calendar, label: 'My Events', path: '/organizer/events' },
+        { icon: ShoppingBag, label: 'Orders', path: '/organizer/orders' },
         { icon: Users, label: 'Attendees', path: '/organizer/attendees' },
         { icon: CreditCard, label: 'Wallet', path: '/organizer/wallet' },
+        { icon: Banknote, label: 'Payouts', path: '/organizer/payouts' },
         { icon: CheckCircle, label: 'KYC Status', path: '/organizer/kyc' },
         { icon: Settings, label: 'Settings', path: '/organizer/settings' },
       ];
@@ -33,46 +35,49 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, user }) => 
       return [
         { icon: LayoutDashboard, label: 'Overview', path: '/admin/dashboard' },
 
-        // Basic Settings Group
+        // Operations Group
         {
-          icon: Settings,
-          label: 'Basic Settings',
+          icon: Calendar,
+          label: 'Operations',
           children: [
-            { icon: FileText, label: 'General Settings', path: '/admin/settings' }, // Reusing system settings as general
-            {
-              icon: FileText,
-              label: 'Email Settings',
-              children: [
-                { icon: FileText, label: 'Mail From Admin', path: '#' },
-                { icon: FileText, label: 'Mail To Admin', path: '#' },
-                { icon: FileText, label: 'Mail Templates', path: '/admin/email-templates' },
-              ]
-            }
+            { icon: Calendar, label: 'All Events', path: '/admin/events' },
+            { icon: CheckCircle, label: 'Event Approvals', path: '/admin/approvals' },
+            { icon: CreditCard, label: 'Withdrawal Requests', path: '/admin/withdrawals' },
           ]
         },
 
-        // PWA Settings Group
+        // Management Group
         {
-          icon: CreditCard, // Using generic icon for now
-          label: 'PWA Settings',
+          icon: Users,
+          label: 'Management',
           children: [
-            { icon: FileText, label: 'PWA Scanner Setting', path: '/admin/qr-scanner' }
+            { icon: Users, label: 'Manage Users', path: '/admin/users' },
+            { icon: Users, label: 'Manage Organizers', path: '/admin/organizers' },
+            { icon: UserPlus, label: 'Organiser Requests', path: '/admin/organizer-requests' },
           ]
         },
 
-        { icon: Users, label: 'Manage Users', path: '/admin/users' },
-        { icon: CheckCircle, label: 'Approvals', path: '/admin/approvals' },
-        { icon: CreditCard, label: 'Withdrawals', path: '/admin/withdrawals' },
-        { icon: Calendar, label: 'All Events', path: '/admin/events' },
+        // CMS & Content
+        {
+          icon: Layers,
+          label: 'Content Management',
+          children: [
+            { icon: Layers, label: 'Homepage CMS', path: '/admin/cms' },
+            { icon: FileText, label: 'Mail Templates', path: '/admin/email-templates' },
+          ]
+        },
+
+        // Settings & Config
         {
           icon: Settings,
-          label: 'Site Settings',
-          path: '/admin/settings',
+          label: 'System Settings',
           children: [
+            { icon: Mail, label: 'Email Integration', path: '/admin/email-integration' },
+            { icon: CreditCard, label: 'Payment Gateways', path: '/admin/payments' },
+            { icon: CheckCircle, label: 'KYC Settings', path: '/admin/settings?tab=kyc' },
+            { icon: Smartphone, label: 'PWA & QR Scanner', path: '/admin/qr-scanner' },
             { icon: FileText, label: 'General & Branding', path: '/admin/settings?tab=general' },
-            { icon: FileText, label: 'Footer Management', path: '/admin/settings?tab=footer' },
-            { icon: Smartphone, label: 'Mobile Bottom Menu', path: '/admin/settings?tab=mobile' },
-            { icon: FileText, label: 'Movie API Safe', path: '/admin/settings?tab=movie_api' },
+            { icon: ShoppingBag, label: 'Footer & Layout', path: '/admin/settings?tab=footer' },
           ]
         },
       ];

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Button from '../../components/Shared/UI/Button';
 import TagInput from '../../components/Shared/UI/TagInput';
 import { Save, Home } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { User } from '../../types';
 
 interface SEOData {
     keywords: string[];
@@ -15,8 +15,11 @@ interface PageSEO {
     [key: string]: SEOData;
 }
 
-const SEOInformation: React.FC = () => {
-    const admin = MOCK_USERS[2];
+interface SEOInformationProps {
+    user: User | null;
+}
+
+const SEOInformation: React.FC<SEOInformationProps> = ({ user }) => {
     const [language, setLanguage] = useState('English');
 
     // Initial State mocking existing data
@@ -54,7 +57,7 @@ const SEOInformation: React.FC = () => {
     ];
 
     return (
-        <DashboardLayout user={admin}>
+        <DashboardLayout user={user}>
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">

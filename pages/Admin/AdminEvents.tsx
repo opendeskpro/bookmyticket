@@ -1,11 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS, MOCK_EVENTS } from '../../constants/mockData';
 import Badge from '../../components/Shared/UI/Badge';
 import { Search, Eye, AlertTriangle } from 'lucide-react';
+import { User } from '../../types';
+import { getEvents } from '../../lib/supabase';
 
-const AdminEvents: React.FC = () => {
-    const admin = MOCK_USERS[2];
+interface AdminEventsProps {
+    user: User | null;
+}
+
+const AdminEvents: React.FC<AdminEventsProps> = ({ user }) => {
+    const admin = user;
+    const [events, setEvents] = useState<any[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const data = await getEvents();
+                if (!cancelled) setEvents(data as any[]);
+            } catch {
+                if (!cancelled) setEvents([]);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     return (
         <DashboardLayout user={admin}>
@@ -35,7 +54,7 @@ const AdminEvents: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {MOCK_EVENTS.map(event => (
+                        {events.map(event => (
                             <tr key={event.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">

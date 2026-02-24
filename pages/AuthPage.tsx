@@ -14,11 +14,7 @@ import {
   Mail,
   User as UserIcon,
   ShieldAlert,
-  ArrowRight,
-  Github,
-  Chrome,
-  Facebook,
-  Apple
+  ArrowRight
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Logo } from '@/components/Layout';
@@ -35,7 +31,6 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
   const [authStep, setAuthStep] = useState<AuthStep>('FORM');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSimulationMode, setIsSimulationMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [resendTimer, setResendTimer] = useState(0);
@@ -70,48 +65,9 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  const handleDemoLogin = (role: UserRole) => {
-    setLoading(true);
-    setError(null);
 
-    let demoEmail = '';
-    let demoName = '';
-    let path = '/';
-
-    if (role === UserRole.ADMIN) {
-      demoEmail = 'admin@bookmyticket.com';
-      demoName = 'Super Admin';
-      path = '/admin/dashboard';
-    } else if (role === UserRole.ORGANISER) {
-      demoEmail = 'demo@organizer.com';
-      demoName = 'Professional Organizer';
-      path = '/organizer/dashboard';
-    } else {
-      demoEmail = 'demo@user.com';
-      demoName = 'Demo User';
-      path = '/';
-    }
-
-    setTimeout(() => {
-      const user: User = {
-        id: `demo-${role.toLowerCase()}-${Date.now()}`,
-        email: demoEmail,
-        name: demoName,
-        role: role,
-        walletBalance: 1000
-      };
-
-      // Persist demo user for new tabs
-      localStorage.setItem('demo_user', JSON.stringify(user));
-
-      onAuth(user);
-      navigate(path);
-      setLoading(false);
-    }, 1000);
-  };
-
-  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
-    setError("Social login is currently disabled in the new backend.");
+  const handleSocialLogin = async (provider: string) => {
+    setError("Social login is disabled. Please use email and password.");
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -141,15 +97,17 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
             else if (profile.role === UserRole.ORGANISER) navigate('/organizer/dashboard');
             else navigate(from || '/user/dashboard');
           } else {
+            const isAdmin = response.user.email === 'v.raja2mail@gmail.com';
             const fallbackUser: User = {
               id: response.user.id,
-              email: response.user.email,
-              name: response.user.user_metadata?.full_name || 'User',
-              role: UserRole.PUBLIC,
+              email: response.user.email || '',
+              name: response.user.user_metadata?.full_name || (isAdmin ? 'Admin' : 'User'),
+              role: isAdmin ? UserRole.ADMIN : UserRole.PUBLIC,
               walletBalance: 0
             };
             onAuth(fallbackUser);
-            navigate(from || '/');
+            if (isAdmin) navigate('/admin/dashboard');
+            else navigate(from || '/');
           }
         }
       }
@@ -174,18 +132,8 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
         </div>
       </header>
 
-      {/* Promo Ticker - Global Coupons */}
-      <div className="bg-[#F84464] text-white py-2 overflow-hidden whitespace-nowrap relative">
-        <div className="flex items-center gap-12 animate-scroll-fast font-bold text-xs uppercase tracking-widest">
-          {[1, 2, 3, 4, 5].map(i => (
-            <span key={i} className="flex items-center gap-2">
-              <ShieldCheck size={14} /> USE CODE: <span className="text-[#FFCC00]">BMS50</span> FOR 50% OFF ON FIRST BOOKING! ✨
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center p-6 mt-[-40px]">
+      {/* Login Form Container */}
+      <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 reveal">
 
           {/* Top Promotional Banner Layer (requested: below banner above notation) */}
@@ -209,27 +157,7 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
               </button>
             </div>
 
-            {/* Social Logins - BMS Style Vertical Stack */}
-            <div className="space-y-3">
-              <button onClick={() => handleSocialLogin('google')} className="w-full flex items-center justify-center gap-4 py-3 px-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-all font-bold text-gray-600 text-sm">
-                <Chrome size={20} className="text-[#4285F4]" />
-                Continue with Google
-              </button>
-              <button disabled className="w-full flex items-center justify-center gap-4 py-3 px-4 border border-gray-200 rounded-md opacity-50 cursor-not-allowed font-bold text-gray-400 text-sm">
-                <Apple size={20} className="text-black" />
-                Continue with Apple
-              </button>
-              <button disabled className="w-full flex items-center justify-center gap-4 py-3 px-4 border border-gray-200 rounded-md opacity-50 cursor-not-allowed font-bold text-gray-400 text-sm">
-                <Facebook size={20} className="text-[#1877F2]" />
-                Continue with Facebook
-              </button>
-            </div>
-
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
-              <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest"><span className="bg-white px-4 text-gray-400">OR</span></div>
-            </div>
-
+            {/* Email/Password Login */}
             <form onSubmit={handleAuth} className="space-y-6">
               {error && (
                 <div className="p-3 bg-red-50 border border-red-100 text-[#F84464] rounded-md text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-2">
@@ -276,30 +204,6 @@ const AuthPage: React.FC<{ onAuth: (user: User | null) => void }> = ({ onAuth })
           </div>
         </div>
 
-        {/* Floating Dev Toggle (Corner) */}
-        <div className="fixed bottom-8 right-8 flex items-center gap-3 bg-white p-2 rounded-full shadow-lg border border-gray-100">
-          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-3">Dev Mode</span>
-          <button
-            onClick={() => setIsSimulationMode(!isSimulationMode)}
-            className={`w-10 h-6 rounded-full transition-all relative ${isSimulationMode ? 'bg-[#F84464]' : 'bg-gray-200'}`}
-          >
-            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isSimulationMode ? 'left-5' : 'left-1'}`} />
-          </button>
-        </div>
-
-        {isSimulationMode && (
-          <div className="fixed bottom-24 right-8 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 animate-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-2 mb-4 border-b pb-2">
-              <ShieldAlert size={14} className="text-[#F84464]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#333333]">Simulation Login</span>
-            </div>
-            <div className="space-y-2">
-              <button onClick={() => handleDemoLogin(UserRole.ADMIN)} className="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded text-[10px] font-bold uppercase transition-all">Super Admin</button>
-              <button onClick={() => handleDemoLogin(UserRole.ORGANISER)} className="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded text-[10px] font-bold uppercase transition-all">Organizer</button>
-              <button onClick={() => handleDemoLogin(UserRole.PUBLIC)} className="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded text-[10px] font-bold uppercase transition-all">Public User</button>
-            </div>
-          </div>
-        )}
       </div>
 
       <footer className="py-6 text-center text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">

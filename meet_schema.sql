@@ -1,14 +1,21 @@
 -- MeetSphere Database Schema
 -- Run this in your Supabase SQL Editor
 
--- 1. Create enum for meeting status
-CREATE TYPE meeting_status AS ENUM ('scheduled', 'active', 'ended');
-
--- 2. Create enum for participant status
-CREATE TYPE participant_status AS ENUM ('waiting', 'admitted', 'left', 'kicked');
-
--- 3. Create enum for participant role
-CREATE TYPE participant_role AS ENUM ('host', 'guest');
+-- 1-3. Create ENUMs (handling if they already exist)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'meeting_status') THEN
+        CREATE TYPE meeting_status AS ENUM ('scheduled', 'active', 'ended');
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'participant_status') THEN
+        CREATE TYPE participant_status AS ENUM ('waiting', 'admitted', 'left', 'kicked');
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'participant_role') THEN
+        CREATE TYPE participant_role AS ENUM ('host', 'guest');
+    END IF;
+END $$;
 
 -- 4. Create Meetings Table
 CREATE TABLE IF NOT EXISTS public.meetings (
@@ -52,37 +59,42 @@ ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 -- ----------------------------------------------------
 
 -- Anyone can read a meeting (needed to check if it exists before joining)
+DROP POLICY IF EXISTS "Meetings are readable by everyone" ON public.meetings;
 CREATE POLICY "Meetings are readable by everyone" 
 ON public.meetings FOR SELECT 
 USING (true);
 
 -- Only authenticated users can create meetings
+DROP POLICY IF EXISTS "Users can create meetings" ON public.meetings;
 CREATE POLICY "Users can create meetings" 
 ON public.meetings FOR INSERT 
 WITH CHECK (auth.uid() = host_id);
 
 -- Only the host can update the meeting
+DROP POLICY IF EXISTS "Host can update their meetings" ON public.meetings;
 CREATE POLICY "Host can update their meetings" 
 ON public.meetings FOR UPDATE 
 USING (auth.uid() = host_id);
+
 
 -- ----------------------------------------------------
 -- RLS POLICIES FOR PARTICIPANTS
 -- ----------------------------------------------------
 
 -- Participants of a meeting can see other participants of that meeting
--- We avoid complex self-joins by doing a simpler check:
--- "If you are the user of this record OR you are the host of the meeting, you can see it. Actually, everyone in the meeting needs to see who else is there. If the meeting is public, maybe anyone authenticated can see. Let's make it so authenticated users can see participant lists."
+DROP POLICY IF EXISTS "Authenticated users can see participants" ON public.participants;
 CREATE POLICY "Authenticated users can see participants" 
 ON public.participants FOR SELECT 
 USING (auth.role() = 'authenticated');
 
 -- Users can insert themselves as participants (join a meeting)
+DROP POLICY IF EXISTS "Users can join a meeting" ON public.participants;
 CREATE POLICY "Users can join a meeting" 
 ON public.participants FOR INSERT 
 WITH CHECK (auth.uid() = user_id);
 
 -- Users can update their own status (e.g., leave the meeting) OR the host can update anyone's status (admit/kick)
+DROP POLICY IF EXISTS "Users can update own status or host can update anyone" ON public.participants;
 CREATE POLICY "Users can update own status or host can update anyone" 
 ON public.participants FOR UPDATE 
 USING (
@@ -91,19 +103,35 @@ USING (
     EXISTS (SELECT 1 FROM public.meetings WHERE id = meeting_id AND host_id = auth.uid())
 );
 
+
 -- ----------------------------------------------------
 -- RLS POLICIES FOR CHAT MESSAGES
 -- ----------------------------------------------------
 
 -- Authenticated users can read chat for a meeting they are in
+DROP POLICY IF EXISTS "Anyone can read chat" ON public.chat_messages;
 CREATE POLICY "Anyone can read chat" 
 ON public.chat_messages FOR SELECT 
 USING (auth.role() = 'authenticated');
 
 -- Authenticated users can send messages
+DROP POLICY IF EXISTS "Users can send messages" ON public.chat_messages;
 CREATE POLICY "Users can send messages" 
 ON public.chat_messages FOR INSERT 
 WITH CHECK (auth.uid() = sender_id);
 
 -- Enable Realtime for the tables so we can listen to chat & participant changes
+-- Drop publication table first to avoid errors if it exists
+DO $$ 
+BEGIN
+  IF EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename IN ('meetings', 'participants', 'chat_messages')
+  ) THEN
+      ALTER PUBLICATION supabase_realtime DROP TABLE public.meetings, public.participants, public.chat_messages;
+  END IF;
+EXCEPTION WHEN OTHERS THEN
+  -- Catch if supabase_realtime doesn't exist or other errors
+END $$;
+
 ALTER PUBLICATION supabase_realtime ADD TABLE public.meetings, public.participants, public.chat_messages;

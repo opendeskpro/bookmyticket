@@ -1,11 +1,13 @@
 import React from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Button from '../../components/Shared/UI/Button';
 import { User, Lock, Bell, Globe } from 'lucide-react';
 
-const OrganizerSettings: React.FC = () => {
-    const user = MOCK_USERS[1];
+interface OrganizerSettingsProps {
+    user: User | null;
+}
+
+const OrganizerSettings: React.FC<OrganizerSettingsProps> = ({ user }) => {
 
     return (
         <DashboardLayout user={user}>

@@ -110,10 +110,20 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user }) => {
                             <h4 className="text-[12px] font-black text-gray-500 uppercase tracking-[0.2em] p-2">More</h4>
                             {[
                                 { icon: <Smartphone size={18} />, label: 'Get the App' },
-                                { icon: <LayoutDashboard size={18} />, label: 'Become an organizer' },
+                                { icon: <LayoutDashboard size={18} />, label: 'Become an organizer', link: '/#organizer-request' },
                                 { icon: <HelpCircle size={18} />, label: 'Help & Support' },
                             ].map((item, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group">
+                                <Link
+                                    to={item.link || '#'}
+                                    key={i}
+                                    onClick={() => {
+                                        onClose();
+                                        if (item.label === 'Become an organizer') {
+                                            // Trigger is handled by URL hash or redirect
+                                        }
+                                    }}
+                                    className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group"
+                                >
                                     <div className="flex items-center gap-4">
                                         <div className="text-gray-500 group-hover:text-[#FBB040] transition-colors">
                                             {item.icon}
@@ -121,7 +131,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user }) => {
                                         <span className="font-bold text-[14px] text-gray-300 group-hover:text-white">{item.label}</span>
                                     </div>
                                     <ChevronRight size={18} className="text-gray-500 group-hover:text-[#FBB040]" />
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>

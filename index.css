@@ -205,3 +205,42 @@ h6 {
 .font-marker-bold {
   font-family: 'Gloria Hallelujah', cursive;
 }
+
+/* Marquee Animations */
+@keyframes marquee-left {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-left {
+  display: flex;
+  animation: marquee-left 40s linear infinite;
+}
+
+.animate-marquee-left:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-right {
+  display: flex;
+  animation: marquee-right 40s linear infinite;
+}
+
+.animate-marquee-right:hover {
+  animation-play-state: paused;
+}

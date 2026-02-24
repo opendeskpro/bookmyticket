@@ -1,14 +1,29 @@
 import React, { useState } from 'react';
-import { MOCK_EVENTS } from '../../constants/mockData';
 import { Search, Filter, MapPin, Calendar, Clock } from 'lucide-react';
 import Button from '../../components/Shared/UI/Button';
 import Card from '../../components/Shared/UI/Card';
 import Badge from '../../components/Shared/UI/Badge';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Event } from '../../types';
 
-const BrowseEvents: React.FC = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+interface BrowseEventsProps {
+    events: Event[];
+}
+
+const BrowseEvents: React.FC<BrowseEventsProps> = ({ events }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const initialQuery = queryParams.get('q') || '';
+
+    const [searchTerm, setSearchTerm] = useState(initialQuery);
+
+    React.useEffect(() => {
+        const q = queryParams.get('q');
+        if (q !== null) {
+            setSearchTerm(q);
+        }
+    }, [location.search]);
 
     return (
         <div className="p-6 max-w-7xl mx-auto min-h-screen">
@@ -32,7 +47,7 @@ const BrowseEvents: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {MOCK_EVENTS.filter(e => e.title.toLowerCase().includes(searchTerm.toLowerCase())).map(event => (
+                {events.filter(e => e.title.toLowerCase().includes(searchTerm.toLowerCase())).map(event => (
                     <div
                         key={event.id}
                         className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between"

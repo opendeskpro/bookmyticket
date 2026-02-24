@@ -1,5 +1,5 @@
 import { Event, User, Ticket, Organizer } from '../types';
-import { supabase, createEvent, createBooking, getUserBookings, getBookedSeats } from './supabase';
+import { supabase, createEvent, createBooking, getUserBookings, getBookedSeats, getHomepageSections, updateHomepageSection } from './supabase';
 
 export const api = {
     events: {
@@ -213,6 +213,14 @@ export const api = {
             const { data, error } = await supabase.rpc('reject_withdrawal', { p_withdrawal_id: id });
             if (error) throw error;
             return data;
+        }
+    },
+    cms: {
+        getHomepage: async () => {
+            return await getHomepageSections();
+        },
+        updateSection: async (key: string, content: any, title?: string) => {
+            return await updateHomepageSection(key, content, title);
         }
     }
 };

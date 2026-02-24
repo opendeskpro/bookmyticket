@@ -1,232 +1,60 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { Event, User, Ticket } from '../types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("❌ Missing Supabase environment variables!");
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Organiser Management
-export const getOrganizersForAdmin = async () => {
-    const { data, error } = await supabase
-        .from('organisers')
-        .select(`
-      *,
-      profiles:user_id (full_name, email)
-    `)
-        .order('created_at', { ascending: false });
+// --- Events ---
 
-    if (error) {
-        console.error('Error fetching organizers:', error);
-        throw error;
-    }
-    return data;
-};
-
-export const approveOrganizer = async (orgId: string, userId: string) => {
-    const { error: orgError } = await supabase
-        .from('organisers')
-        .update({ status: 'ACTIVE', is_verified: true })
-        .eq('id', orgId);
-
-    if (orgError) throw orgError;
-
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ role: 'ORGANISER' })
-        .eq('id', userId);
-
-    if (profileError) throw profileError;
-};
-
-export const rejectOrganizer = async (orgId: string) => {
-    const { error } = await supabase
-        .from('organisers')
-        .update({ status: 'SUSPENDED' })
-        .eq('id', orgId);
-
-    if (error) throw error;
-};
-
-export const getFeaturedOrganizers = async () => {
-    const { data, error } = await supabase
-        .from('organisers')
-        .select('*')
-        .eq('status', 'ACTIVE')
-        .limit(4);
-
-    if (error) {
-        console.error('Error fetching featured organizers:', error);
-        return [];
-    }
-    return data;
-};
-
-export const getOrganiserPublicProfile = async (orgId: string) => {
-    const { data, error } = await supabase
-        .from('organisers')
-        .select('*')
-        .eq('id', orgId)
-        .single();
-
-    if (error) {
-        console.error('Error fetching organizer profile:', error);
-        return null;
-    }
-    return data;
-};
-
-// Ecommerce & Product Management
-export const getProducts = async () => {
-    const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data;
-};
-
-export const createProduct = async (productData: any) => {
-    const { data, error } = await supabase
-        .from('products')
-        .insert([productData])
-        .select()
-        .single();
-
-    if (error) throw error;
-    return data;
-};
-
-// Financial Ledger
-export const getTransactions = async () => {
-    const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data;
-};
-
-// Profile Management
-export const upsertProfile = async (userId: string, email: string, name: string) => {
-    const { error } = await supabase
-        .from('profiles')
-        .upsert({
-            id: userId,
-            email,
-            full_name: name,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
-
-    if (error) throw error;
-};
-
-// Site Config Management
-export const getSiteConfig = async (key: string) => {
-    const { data, error } = await supabase
-        .from('site_config')
-        .select('config_value')
-        .eq('section_key', key)
-        .single();
-
-    if (error && error.code !== 'PGRST116') { // Ignore 'row not found' error
-        console.error('Error fetching site config:', error);
-        return null;
-    }
-    return data?.config_value || null;
-};
-
-export const updateSiteConfig = async (key: string, value: any) => {
-    const { error } = await supabase
-        .from('site_config')
-        .upsert({ section_key: key, config_value: value }, { onConflict: 'section_key' });
-
-    if (error) {
-        console.error('Error updating site config:', error);
-        throw error;
-    }
-};
-
-// Event Categories Management
-export const getEventCategories = async () => {
-    const { data, error } = await supabase
-        .from('event_categories')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-    if (error) throw error;
-    return data;
-};
-
-export const createEventCategory = async (name: string, icon: string) => {
-    const { data, error } = await supabase
-        .from('event_categories')
-        .insert([{ name, icon, status: 'ACTIVE' }])
-        .select()
-        .single();
-
-    if (error) throw error;
-    return data;
-};
-
-export const updateEventCategory = async (id: string, updates: any) => {
-    const { data, error } = await supabase
-        .from('event_categories')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-    if (error) throw error;
-    return data;
-};
-
-export const deleteEventCategory = async (id: string) => {
-    const { error } = await supabase
-        .from('event_categories')
-        .delete()
-        .eq('id', id);
-
-    if (error) throw error;
-};
-
-// Events Management
-export const getEvents = async () => {
+export const getEvents = async (): Promise<Event[]> => {
     const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select('*, ticket_types(*)')
         .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+        console.error("Error fetching events:", error);
+        return [];
+    }
 
     return (data || []).map(event => ({
         ...event,
         banner: event.banner_url || event.banner,
-        date: event.event_date || event.date
+        date: event.event_date || event.date,
+        time: event.start_time || event.time,
+        tickets: event.ticket_types || []
     }));
 };
 
 export const createEvent = async (eventData: any) => {
-    // 1. Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
-    // Fetch the organiser record for this user
-    const { data: organiser, error: orgError } = await supabase
+    // Get organiser id for this user
+    const { data: organiser } = await supabase
         .from('organisers')
         .select('id')
         .eq('user_id', user.id)
         .single();
 
-    if (orgError || !organiser) throw new Error("User is not an active organizer");
-
-    // 2. Prepare data
     const payload = {
-        ...eventData,
-        organiser_id: organiser.id,
-        created_at: new Date().toISOString()
+        organiser_id: organiser?.id || user.id,
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category,
+        city: eventData.city,
+        venue: eventData.venue,
+        event_date: eventData.date,
+        start_time: eventData.time,
+        banner_url: eventData.banner,
+        status: 'PUBLISHED'
     };
 
     const { data, error } = await supabase
@@ -239,24 +67,19 @@ export const createEvent = async (eventData: any) => {
     return data;
 };
 
-// --- Bookings & Tickets ---
+// --- Bookings ---
 
 export const createBooking = async (
     eventId: string,
     seats: any[],
     totalAmount: number,
-    bookingTime?: string, // New parameter
-    breakdown?: {
-        ticketPrice: number,
-        platformFee: number,
-        internetHandlingFee: number,
-        tax: number
-    }
+    bookingTime?: string,
+    breakdown?: any
 ) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
-    // 1. Create Booking Record
+    // 1. Create Booking
     const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert([{
@@ -265,8 +88,7 @@ export const createBooking = async (
             total_amount: totalAmount,
             quantity: seats.length,
             status: 'CONFIRMED',
-            booking_time: bookingTime, // Save selected time
-            // Add breakdown if provided, otherwise assume totalAmount is ticketPrice (legacy compat)
+            booking_time: bookingTime,
             ticket_price: breakdown?.ticketPrice || totalAmount,
             platform_fee: breakdown?.platformFee || 0,
             internet_handling_fee: breakdown?.internetHandlingFee || 0,
@@ -277,7 +99,7 @@ export const createBooking = async (
 
     if (bookingError) throw bookingError;
 
-    // 2. Create Ticket Records
+    // 2. Create Tickets
     const tickets = seats.map(seat => ({
         booking_id: booking.id,
         event_id: eventId,
@@ -297,6 +119,34 @@ export const createBooking = async (
     return booking;
 };
 
+export const getUserBookings = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+      *,
+      events (
+        title,
+        event_date,
+        venue,
+        banner_url
+      )
+    `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map((b: any) => ({
+        ...b,
+        eventTitle: b.events?.title,
+        eventDate: b.events?.event_date,
+        eventVenue: b.events?.venue,
+        banner: b.events?.banner_url
+    }));
+};
+
 export const getBookedSeats = async (eventId: string) => {
     const { data, error } = await supabase
         .from('tickets')
@@ -305,90 +155,271 @@ export const getBookedSeats = async (eventId: string) => {
         .eq('status', 'VALID');
 
     if (error) throw error;
-    return data;
+    return data || [];
 };
 
-export const getUserBookings = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+// --- Organiser helpers (used in dashboards, orders, wallet, etc.) ---
 
+export const getOrganiserIdForUser = async (userId: string): Promise<string | null> => {
     const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-            *,
-            events ( title, event_date, venue, banner_url ),
-            tickets ( * )
-        `)
-        .eq('user_id', user.id)
+        .from('organisers')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+    if (error || !data) return null;
+    return data.id as string;
+};
+
+export const getEventsForOrganiser = async (organiserId: string): Promise<Event[]> => {
+    const { data, error } = await supabase
+        .from('events')
+        .select('*, ticket_types(*)')
+        .eq('organiser_id', organiserId)
         .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+        console.error('Error fetching organiser events:', error);
+        return [];
+    }
 
-    return (data || []).map(booking => ({
-        ...booking,
-        events: booking.events ? {
-            ...booking.events,
-            banner: booking.events.banner_url,
-            date: booking.events.event_date
-        } : null
+    return (data || []).map((event: any) => ({
+        ...event,
+        banner: event.banner_url || event.banner,
+        date: event.event_date || event.date,
+        time: event.start_time || event.time,
+        tickets: event.ticket_types || []
     }));
 };
 
-// --- Profiles ---
-
-export const getUserProfile = async (userId: string) => {
+export const getBookingsForOrganiser = async (organiserId: string) => {
     const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+        .from('bookings')
+        .select(`
+            id,
+            user_id,
+            event_id,
+            total_amount,
+            quantity,
+            status,
+            created_at,
+            booking_time,
+            events!inner (
+                id,
+                title,
+                event_date,
+                venue,
+                organiser_id
+            ),
+            profiles:user_id (
+                full_name,
+                email
+            ),
+            tickets (*)
+        `)
+        .eq('events.organiser_id', organiserId)
+        .order('created_at', { ascending: false });
 
-    if (error) return null;
-    return data;
+    if (error) {
+        console.error('Error fetching organiser bookings:', error);
+        return [];
+    }
+
+    return (data || []).map((b: any) => ({
+        ...b,
+        eventTitle: b.events?.title,
+        eventDate: b.events?.event_date,
+        eventVenue: b.events?.venue,
+        buyerName: b.profiles?.full_name,
+        buyerEmail: b.profiles?.email,
+    }));
 };
 
-// Ticket Validation
-export const validateTicket = async (code: string) => {
-    // 1. Try to find ticket by ID (if code is UUID) or QR code field
-    // Assuming code is the ticket ID for simplicity as per current mock usage, 
-    // or we might need a specific 'qr_code' column lookup if the code is different.
+export const getWithdrawalsForOrganiser = async (organiserId: string) => {
+    const { data, error } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('organiser_id', organiserId)
+        .order('created_at', { ascending: false });
 
-    // Check if code is a valid UUID
-    const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(code);
+    if (error) {
+        console.error('Error fetching organiser withdrawals:', error);
+        return [];
+    }
+    return data || [];
+};
 
-    let query = supabase
-        .from('tickets')
+export const getTransactionsForOrganiser = async (organiserId: string) => {
+    const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('organiser_id', organiserId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching organiser transactions:', error);
+        return [];
+    }
+    return data || [];
+};
+
+// --- Event Categories Management ---
+
+export const getEventCategories = async () => {
+    const { data, error } = await supabase
+        .from('event_categories')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('Error fetching event categories:', error);
+        return [];
+    }
+    return data || [];
+};
+
+// --- Admin: organisers list ---
+
+export const getOrganizersForAdmin = async () => {
+    const { data, error } = await supabase
+        .from('organisers')
         .select(`
             *,
-            events ( title, start_time, banner_url, venue ),
-            bookings ( user_id, profiles:user_id ( full_name ) )
+            profiles:user_id ( full_name, email )
         `)
-        .eq('status', 'VALID');
+        .order('created_at', { ascending: false });
 
-    if (isUuid) {
-        query = query.eq('id', code);
-    } else {
-        query = query.eq('qr_code', code);
+    if (error) {
+        console.error('Error fetching organisers for admin:', error);
+        return [];
     }
+    return data || [];
+};
 
-    const { data, error } = await query.single();
+// --- Site Config Management ---
 
-    if (error || !data) {
-        console.error("Ticket validation failed:", error);
-        return {
-            success: false,
-            message: "Invalid or expired ticket"
-        };
+export const getSiteConfig = async (key: string) => {
+    const { data, error } = await supabase
+        .from('site_config')
+        .select('config_value')
+        .eq('section_key', key);
+
+    if (error) {
+        console.error('Error fetching site config:', error);
+        return null;
     }
+    return data && data.length > 0 ? data[0].config_value : null;
+};
 
-    // Transform to expected format
+export const updateSiteConfig = async (key: string, value: any) => {
+    const { error } = await supabase
+        .from('site_config')
+        .upsert({ section_key: key, config_value: value }, { onConflict: 'section_key' });
+
+    if (error) {
+        console.error('Error updating site config:', error);
+        throw error;
+    }
+};
+
+// --- Dashboard Stats ---
+
+export const getOrganizerStats = async (userId: string) => {
+    // 1. Get Organiser ID
+    const { data: organiser } = await supabase
+        .from('organisers')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+    if (!organiser) return { totalEvents: 0, ticketsSold: 0, totalRevenue: 0 };
+
+    // 2. Total Events
+    const { count: totalEvents } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+        .eq('organiser_id', organiser.id);
+
+    // 3. Tickets Sold
+    const { count: ticketsSold } = await supabase
+        .from('tickets')
+        .select('*, events!inner(*)', { count: 'exact', head: true })
+        .eq('events.organiser_id', organiser.id);
+
+    // 4. Total Revenue
+    const { data: bookings, error } = await supabase
+        .from('bookings')
+        .select('total_amount, events!inner(*)')
+        .eq('events.organiser_id', organiser.id);
+
+    const totalRevenue = (bookings || []).reduce((acc, curr) => acc + (Number(curr.total_amount) || 0), 0);
+
     return {
-        success: true,
-        eventName: data.events?.title || 'Unknown Event',
-        attendee: data.bookings?.profiles?.full_name || 'Guest',
-        ticketType: data.type || 'Standard',
-        checkInTime: new Date().toISOString(),
-        venue: data.events?.venue,
-        banner: data.events?.banner_url
+        totalEvents: totalEvents || 0,
+        ticketsSold: ticketsSold || 0,
+        totalRevenue: totalRevenue || 0
     };
+};
+
+export const getCityEventCounts = async () => {
+    const { data, error } = await supabase
+        .from('events')
+        .select('city');
+
+    if (error) return {};
+
+    const counts: Record<string, number> = {};
+    (data || []).forEach((e: any) => {
+        if (e.city) {
+            counts[e.city] = (counts[e.city] || 0) + 1;
+        }
+    });
+    return counts;
+};
+
+export const getFeaturedOrganizers = async () => {
+    const { data, error } = await supabase
+        .from('organisers')
+        .select('name, logo_url, status')
+        .eq('status', 'ACTIVE')
+        .limit(6);
+
+    if (error) return [];
+
+    return (data || []).map((org: any) => ({
+        name: org.name,
+        logo: org.logo_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=200&auto=format&fit=crop',
+        count: 'Featured'
+    }));
+};
+
+// --- Homepage CMS ---
+
+export const getHomepageSections = async () => {
+    const { data, error } = await supabase
+        .from('homepage_sections')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('Error fetching homepage sections:', error);
+        return [];
+    }
+    return data || [];
+};
+
+export const updateHomepageSection = async (key: string, content: any, title?: string) => {
+    const { error } = await supabase
+        .from('homepage_sections')
+        .upsert({
+            section_key: key,
+            content: content,
+            title: title,
+            updated_at: new RegExp('now()').test('now()') ? new Date().toISOString() : new Date().toISOString()
+        }, { onConflict: 'section_key' });
+
+    if (error) {
+        console.error('Error updating homepage section:', error);
+        throw error;
+    }
 };

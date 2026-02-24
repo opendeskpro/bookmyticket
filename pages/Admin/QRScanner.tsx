@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { MOCK_USERS } from '../../constants/mockData';
 import Button from '../../components/Shared/UI/Button';
 import { Scan, Camera, XCircle, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { User } from '../../types';
 
-const QRScanner: React.FC = () => {
-    const admin = MOCK_USERS[2];
+interface QRScannerProps {
+    user: User | null;
+}
+
+const QRScanner: React.FC<QRScannerProps> = ({ user }) => {
     const [scanResult, setScanResult] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(false);
     const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>([]);

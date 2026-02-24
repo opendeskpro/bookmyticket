@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Event, User } from '../../types';
 import { api } from '../../lib/api';
-import { MapPin, Calendar, Clock, Share2, Heart, ShieldCheck, Ticket, Users, Star, MessageSquare, Send, ChevronLeft, Loader2, Info } from 'lucide-react';
+import { MapPin, Calendar, Clock, Share2, Heart, ShieldCheck, Ticket, Users, Star, MessageSquare, Send, ChevronLeft, Loader2, Info, Video } from 'lucide-react';
 import BookingModal from '../../components/Booking/BookingModal';
 
 interface EventDetailsPageProps {
@@ -17,18 +17,22 @@ const EventDetailsPage: React.FC<EventDetailsPageProps> = ({ events, user }) => 
   const [loading, setLoading] = useState(!event);
   const [error, setError] = useState<string | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [hasTicket, setHasTicket] = useState(false);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     if (!event && id) {
       const fetchEvent = async () => {
         try {
           const data = await api.events.get(id);
-          setEvent({
-            ...data,
-            banner: data.banner_url || data.banner,
-            date: data.event_date || data.date,
-            time: data.start_time || data.time
-          });
+          if (data) {
+            setEvent({
+              ...data,
+              banner: data.banner_url || data.banner,
+              date: data.event_date || data.date,
+              time: data.start_time || data.time
+            });
+          }
         } catch (err: any) {
           setError(err.message);
         } finally {
@@ -37,7 +41,15 @@ const EventDetailsPage: React.FC<EventDetailsPageProps> = ({ events, user }) => 
       };
       fetchEvent();
     }
-  }, [id, event]);
+
+    // Check if user has a ticket
+    if (user && id) {
+      api.bookings.list().then(tickets => {
+        const userHasTicket = tickets.some(t => t.eventId === id);
+        setHasTicket(userHasTicket);
+      });
+    }
+  }, [id, event, user]);
 
   if (loading) {
     return (
@@ -180,20 +192,6 @@ const EventDetailsPage: React.FC<EventDetailsPageProps> = ({ events, user }) => 
               </div>
             </div>
 
-            {/* Venue Map Placeholder */}
-            {event.latitude && event.longitude && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-black text-white drop-shadow-md">Venue Location</h2>
-                <div className="h-64 bg-[#151515] rounded-[2rem] overflow-hidden relative border border-white/5 shadow-inner">
-                  {/* Map placeholder */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 font-bold">
-                    <MapPin size={32} className="mb-2 text-[#FBB040] drop-shadow-[0_0_10px_rgba(251,176,64,0.5)]" />
-                    <span>Map View Unavailable in Demo</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
           </div>
 
           {/* Sticky Sidebar (Right) */}
@@ -227,7 +225,44 @@ const EventDetailsPage: React.FC<EventDetailsPageProps> = ({ events, user }) => 
                 </div>
               </div>
 
-              {/* Event Details Card (Below Book Now as requested) */}
+              {/* Virtual Meeting Join Card */}
+              {(event.is_virtual || event.isVirtual) && event.meeting_id && (
+                <div className="bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-[2rem] p-8 border border-blue-500/20 shadow-xl relative overflow-hidden group">
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 blur-3xl rounded-full"></div>
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/30">
+                        <Video size={20} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white">Virtual Session</h4>
+                        <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">MeetSphere Hosted</p>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                      {hasTicket
+                        ? "You have a ticket! You can join the session directly from here."
+                        : "Join the live session from anywhere. Book your spot to get access."}
+                    </p>
+
+                    {hasTicket ? (
+                      <button
+                        onClick={() => navigate(`/meeting/${event.meeting_id}`)}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                      >
+                        Join Meeting <Video size={18} />
+                      </button>
+                    ) : (
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                        <p className="text-xs font-bold text-gray-500">Access restricted to ticket holders</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Event Details Card */}
               <div className="bg-[#151515] rounded-[2rem] p-8 border border-white/5 shadow-xl space-y-6">
                 <h3 className="font-black text-white text-lg drop-shadow-md">Event Details</h3>
 

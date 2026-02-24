@@ -1,6 +1,7 @@
 import React from 'react';
-import { Menu, Bell, User as UserIcon } from 'lucide-react';
-import { User } from '../../../types';
+import { Menu, Bell, User as UserIcon, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User } from '../../types';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -8,9 +9,18 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick, user }) => {
+  const navigate = useNavigate();
+
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30">
       <div className="flex items-center gap-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors border border-transparent hover:border-gray-200"
+          title="Go Back"
+        >
+          <ArrowLeft size={20} />
+        </button>
         <button
           onClick={onMenuClick}
           className="lg:hidden p-2 text-gray-500 hover:bg-gray-50 rounded-lg"

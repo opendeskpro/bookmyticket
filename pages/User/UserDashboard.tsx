@@ -1,8 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_EVENTS, MOCK_BOOKINGS } from '../../constants/mockData';
+import { Event, Ticket } from '../../types';
 
-const UserDashboard: React.FC = () => {
+interface UserDashboardProps {
+    events: Event[];
+    tickets: Ticket[];
+}
+
+const UserDashboard: React.FC<UserDashboardProps> = ({ events, tickets }) => {
     const navigate = useNavigate();
 
     return (
@@ -11,21 +16,23 @@ const UserDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h3 className="text-gray-500 text-sm font-medium">Total Bookings</h3>
-                    <p className="text-3xl font-bold mt-2">{MOCK_BOOKINGS.length}</p>
+                    <p className="text-3xl font-bold mt-2">{tickets.length}</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h3 className="text-gray-500 text-sm font-medium">Upcoming Events</h3>
-                    <p className="text-3xl font-bold mt-2">2</p>
+                    <p className="text-3xl font-bold mt-2">
+                        {tickets.filter(t => t.status === 'BOOKED' || t.status === 'CONFIRMED').length}
+                    </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h3 className="text-gray-500 text-sm font-medium">Wallet Balance</h3>
-                    <p className="text-3xl font-bold mt-2">₹500</p>
+                    <p className="text-3xl font-bold mt-2">—</p>
                 </div>
             </div>
 
             <h2 className="text-xl font-bold mb-4">Recommended For You</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {MOCK_EVENTS.map(event => (
+                {events.slice(0, 6).map(event => (
                     <div
                         key={event.id}
                         className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
